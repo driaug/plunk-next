@@ -1,0 +1,332 @@
+import {Controller, Delete, Get, Middleware, Patch, Post} from '@overnightjs/core';
+import type {Request, Response} from 'express';
+
+import type {AuthResponse} from '../middleware/auth.js';
+import {requireProjectAccess} from '../middleware/auth.js';
+import {WorkflowService} from '../services/WorkflowService.js';
+
+@Controller('workflows')
+export class Workflows {
+  /**
+   * GET /workflows
+   * List all workflows for the authenticated project
+   */
+  @Get('')
+  @Middleware([requireProjectAccess])
+  public async list(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = Math.min(parseInt(req.query.pageSize as string) || 20, 100);
+    const search = req.query.search as string | undefined;
+
+    const result = await WorkflowService.list(auth.projectId!, page, pageSize, search);
+
+    return res.status(200).json(result);
+  }
+
+  /**
+   * GET /workflows/:id
+   * Get a specific workflow with all steps and transitions
+   */
+  @Get(':id')
+  @Middleware([requireProjectAccess])
+  public async get(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const workflowId = req.params.id;
+
+    if (!workflowId) {
+      return res.status(400).json({error: 'Workflow ID is required'});
+    }
+
+    const workflow = await WorkflowService.get(auth.projectId!, workflowId);
+
+    return res.status(200).json(workflow);
+  }
+
+  /**
+   * POST /workflows
+   * Create a new workflow
+   */
+  @Post('')
+  @Middleware([requireProjectAccess])
+  public async create(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const {name, description, eventName, enabled, allowReentry} = req.body;
+
+    if (!name) {
+      return res.status(400).json({error: 'Name is required'});
+    }
+
+    if (!eventName) {
+      return res.status(400).json({error: 'Event name is required'});
+    }
+
+    const workflow = await WorkflowService.create(auth.projectId!, {
+      name,
+      description,
+      eventName,
+      enabled,
+      allowReentry,
+    });
+
+    return res.status(201).json(workflow);
+  }
+
+  /**
+   * PATCH /workflows/:id
+   * Update a workflow
+   */
+  @Patch(':id')
+  @Middleware([requireProjectAccess])
+  public async update(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const workflowId = req.params.id;
+    const {name, description, triggerType, triggerConfig, enabled, allowReentry} = req.body;
+
+    if (!workflowId) {
+      return res.status(400).json({error: 'Workflow ID is required'});
+    }
+
+    const workflow = await WorkflowService.update(auth.projectId!, workflowId, {
+      name,
+      description,
+      triggerType,
+      triggerConfig,
+      enabled,
+      allowReentry,
+    });
+
+    return res.status(200).json(workflow);
+  }
+
+  /**
+   * DELETE /workflows/:id
+   * Delete a workflow
+   */
+  @Delete(':id')
+  @Middleware([requireProjectAccess])
+  public async delete(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const workflowId = req.params.id;
+
+    if (!workflowId) {
+      return res.status(400).json({error: 'Workflow ID is required'});
+    }
+
+    await WorkflowService.delete(auth.projectId!, workflowId);
+
+    return res.status(204).send();
+  }
+
+  /**
+   * POST /workflows/:id/steps
+   * Add a step to a workflow
+   */
+  @Post(':id/steps')
+  @Middleware([requireProjectAccess])
+  public async addStep(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const workflowId = req.params.id;
+    const {type, name, position, config, templateId, autoConnect} = req.body;
+
+    if (!workflowId) {
+      return res.status(400).json({error: 'Workflow ID is required'});
+    }
+
+    if (!type || !name || !position || !config) {
+      return res.status(400).json({error: 'Type, name, position, and config are required'});
+    }
+
+    const step = await WorkflowService.addStep(auth.projectId!, workflowId, {
+      type,
+      name,
+      position,
+      config,
+      templateId,
+      autoConnect,
+    });
+
+    return res.status(201).json(step);
+  }
+
+  /**
+   * PATCH /workflows/:id/steps/:stepId
+   * Update a workflow step
+   */
+  @Patch(':id/steps/:stepId')
+  @Middleware([requireProjectAccess])
+  public async updateStep(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const workflowId = req.params.id;
+    const stepId = req.params.stepId;
+    const {name, position, config, templateId} = req.body;
+
+    if (!workflowId || !stepId) {
+      return res.status(400).json({error: 'Workflow ID and Step ID are required'});
+    }
+
+    const step = await WorkflowService.updateStep(auth.projectId!, workflowId, stepId, {
+      name,
+      position,
+      config,
+      templateId,
+    });
+
+    return res.status(200).json(step);
+  }
+
+  /**
+   * DELETE /workflows/:id/steps/:stepId
+   * Delete a workflow step
+   */
+  @Delete(':id/steps/:stepId')
+  @Middleware([requireProjectAccess])
+  public async deleteStep(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const workflowId = req.params.id;
+    const stepId = req.params.stepId;
+
+    if (!workflowId || !stepId) {
+      return res.status(400).json({error: 'Workflow ID and Step ID are required'});
+    }
+
+    await WorkflowService.deleteStep(auth.projectId!, workflowId, stepId);
+
+    return res.status(204).send();
+  }
+
+  /**
+   * POST /workflows/:id/transitions
+   * Create a transition between steps
+   */
+  @Post(':id/transitions')
+  @Middleware([requireProjectAccess])
+  public async createTransition(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const workflowId = req.params.id;
+    const {fromStepId, toStepId, condition, priority} = req.body;
+
+    if (!workflowId) {
+      return res.status(400).json({error: 'Workflow ID is required'});
+    }
+
+    if (!fromStepId || !toStepId) {
+      return res.status(400).json({error: 'From step ID and to step ID are required'});
+    }
+
+    const transition = await WorkflowService.createTransition(auth.projectId!, workflowId, {
+      fromStepId,
+      toStepId,
+      condition,
+      priority,
+    });
+
+    return res.status(201).json(transition);
+  }
+
+  /**
+   * DELETE /workflows/:id/transitions/:transitionId
+   * Delete a transition
+   */
+  @Delete(':id/transitions/:transitionId')
+  @Middleware([requireProjectAccess])
+  public async deleteTransition(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const workflowId = req.params.id;
+    const transitionId = req.params.transitionId;
+
+    if (!workflowId || !transitionId) {
+      return res.status(400).json({error: 'Workflow ID and Transition ID are required'});
+    }
+
+    await WorkflowService.deleteTransition(auth.projectId!, workflowId, transitionId);
+
+    return res.status(204).send();
+  }
+
+  /**
+   * POST /workflows/:id/executions
+   * Start a workflow execution for a contact
+   */
+  @Post(':id/executions')
+  @Middleware([requireProjectAccess])
+  public async startExecution(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const workflowId = req.params.id;
+    const {contactId, context} = req.body;
+
+    if (!workflowId) {
+      return res.status(400).json({error: 'Workflow ID is required'});
+    }
+
+    if (!contactId) {
+      return res.status(400).json({error: 'Contact ID is required'});
+    }
+
+    const execution = await WorkflowService.startExecution(auth.projectId!, workflowId, contactId, context);
+
+    return res.status(201).json(execution);
+  }
+
+  /**
+   * GET /workflows/:id/executions
+   * List executions for a workflow
+   */
+  @Get(':id/executions')
+  @Middleware([requireProjectAccess])
+  public async listExecutions(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const workflowId = req.params.id;
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = Math.min(parseInt(req.query.pageSize as string) || 20, 100);
+    const status = req.query.status as any;
+
+    if (!workflowId) {
+      return res.status(400).json({error: 'Workflow ID is required'});
+    }
+
+    const result = await WorkflowService.listExecutions(auth.projectId!, workflowId, page, pageSize, status);
+
+    return res.status(200).json(result);
+  }
+
+  /**
+   * GET /workflows/:id/executions/:executionId
+   * Get a specific execution with details
+   */
+  @Get(':id/executions/:executionId')
+  @Middleware([requireProjectAccess])
+  public async getExecution(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const workflowId = req.params.id;
+    const executionId = req.params.executionId;
+
+    if (!workflowId || !executionId) {
+      return res.status(400).json({error: 'Workflow ID and Execution ID are required'});
+    }
+
+    const execution = await WorkflowService.getExecution(auth.projectId!, workflowId, executionId);
+
+    return res.status(200).json(execution);
+  }
+
+  /**
+   * DELETE /workflows/:id/executions/:executionId
+   * Cancel a workflow execution
+   */
+  @Delete(':id/executions/:executionId')
+  @Middleware([requireProjectAccess])
+  public async cancelExecution(req: Request, res: Response) {
+    const auth = res.locals.auth as AuthResponse;
+    const workflowId = req.params.id;
+    const executionId = req.params.executionId;
+
+    if (!workflowId || !executionId) {
+      return res.status(400).json({error: 'Workflow ID and Execution ID are required'});
+    }
+
+    const execution = await WorkflowService.cancelExecution(auth.projectId!, workflowId, executionId);
+
+    return res.status(200).json(execution);
+  }
+}

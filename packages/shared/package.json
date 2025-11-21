@@ -1,0 +1,21 @@
+{
+  "name": "@repo/shared",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "clean": "rimraf node_modules .turbo dist",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@repo/db": "*",
+    "@repo/typescript-config": "*",
+    "@types/node": "24.10.0",
+    "typescript": "5.7.2"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  }
+}

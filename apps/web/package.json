@@ -1,0 +1,53 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "sitemap": "next-sitemap",
+    "start": "next start",
+    "lint": "eslint .",
+    "clean": "rimraf node_modules .next .turbo"
+  },
+  "dependencies": {
+    "@repo/db": "*",
+    "@repo/shared": "*",
+    "@repo/ui": "*",
+    "@types/dagre": "^0.7.53",
+    "@xyflow/react": "^12.9.3",
+    "dagre": "^0.8.5",
+    "framer-motion": "^12.23.24",
+    "lucide-react": "^0.553.0",
+    "next": "16.0.1",
+    "next-seo": "^6.6.0",
+    "nuqs": "^2.7.3",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-hook-form": "^7.66.0",
+    "react-intl": "^7.1.14",
+    "recharts": "^3.4.1",
+    "sonner": "^2.0.6",
+    "swr": "^2.2.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/postcss": "^4.1.17",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/node": "24.10.0",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.1",
+    "next-sitemap": "^4.2.3",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^4.1.17",
+    "typescript": "5.7.2"
+  },
+  "resolutions": {
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2"
+  }
+}

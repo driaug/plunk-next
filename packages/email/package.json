@@ -1,0 +1,29 @@
+{
+  "name": "@repo/email",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "email dev -p 1001 --dir=src/emails",
+    "clean": "rimraf node_modules .turbo dist",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@react-email/preview-server": "5.0.1",
+    "@repo/typescript-config": "*",
+    "@types/react": "^19",
+    "react-email": "5.0.1",
+    "typescript": "5.7.2"
+  },
+  "peerDependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "dependencies": {
+    "@react-email/components": "^1.0.0",
+    "@repo/db": "*",
+    "@repo/types": "*"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  }
+}

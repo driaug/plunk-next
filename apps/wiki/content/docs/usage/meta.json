@@ -1,0 +1,16 @@
+{
+  "title": "Starten met Swyp",
+  "defaultOpen": false,
+  "pages": [
+    "connect-suppliers",
+    "troubleshoot-supplier-connection",
+    "search-tips",
+    "add-to-cart",
+    "cart",
+    "sidecart",
+    "checkout",
+    "shopping-lists",
+    "manage-list-items",
+    "change-practice-address"
+  ]
+}
