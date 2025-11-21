@@ -84,8 +84,14 @@ RUN yarn workspace @repo/db db:generate
 # Turbo will handle the dependency graph and build order
 RUN yarn build
 
-# Ensure public directories exist (create empty ones if needed)
-RUN mkdir -p apps/web/public apps/landing/public apps/wiki/public
+# Ensure directories exist (create empty ones if build didn't generate them)
+RUN mkdir -p \
+    apps/web/public \
+    apps/landing/public \
+    apps/wiki/public \
+    apps/web/.next/standalone \
+    apps/landing/.next/standalone \
+    apps/wiki/.next/standalone
 
 # ============================================
 # Stage 3: Production Runtime
@@ -113,12 +119,12 @@ COPY --from=builder --chown=plunk:nodejs /app/apps/web/package.json ./apps/web/
 COPY --from=builder --chown=plunk:nodejs /app/apps/landing/package.json ./apps/landing/
 COPY --from=builder --chown=plunk:nodejs /app/apps/wiki/package.json ./apps/wiki/
 
-# Copy Next.js standalone builds (if available - these are optional)
-COPY --from=builder --chown=plunk:nodejs /app/apps/web/.next/standalone ./apps/web/.next/standalone 2>/dev/null || true
-COPY --from=builder --chown=plunk:nodejs /app/apps/landing/.next/standalone ./apps/landing/.next/standalone 2>/dev/null || true
-COPY --from=builder --chown=plunk:nodejs /app/apps/wiki/.next/standalone ./apps/wiki/.next/standalone 2>/dev/null || true
+# Copy Next.js standalone builds (guaranteed to exist from builder stage)
+COPY --from=builder --chown=plunk:nodejs /app/apps/web/.next/standalone ./apps/web/.next/standalone
+COPY --from=builder --chown=plunk:nodejs /app/apps/landing/.next/standalone ./apps/landing/.next/standalone
+COPY --from=builder --chown=plunk:nodejs /app/apps/wiki/.next/standalone ./apps/wiki/.next/standalone
 
-# Copy static files for Next.js apps (mkdir ensures directories exist even if empty)
+# Copy static files for Next.js apps
 COPY --from=builder --chown=plunk:nodejs /app/apps/web/public ./apps/web/public
 COPY --from=builder --chown=plunk:nodejs /app/apps/landing/public ./apps/landing/public
 COPY --from=builder --chown=plunk:nodejs /app/apps/wiki/public ./apps/wiki/public
