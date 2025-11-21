@@ -1,6 +1,7 @@
 {
   "name": "@repo/db",
   "version": "0.0.0",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -11,10 +12,10 @@
     "build": "tsc && prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.0"
+    "@prisma/client": "^6.19.0",
+    "prisma": "^6.19.0"
   },
   "devDependencies": {
-    "prisma": "^6.19.0",
     "ts-node": "^10.9.2"
   }
 }

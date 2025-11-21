@@ -77,9 +77,8 @@ module.exports = {
     },
     {
       name: 'web',
-      script: 'yarn',
-      args: 'start',
-      cwd: '/app/apps/web',
+      script: '/app/apps/web/.next/standalone/apps/web/server.js',
+      cwd: '/app',
       instances: 1,
       exec_mode: 'fork',
       env: {
@@ -89,9 +88,8 @@ module.exports = {
     },
     {
       name: 'landing',
-      script: 'yarn',
-      args: 'start',
-      cwd: '/app/apps/landing',
+      script: '/app/apps/landing/.next/standalone/apps/landing/server.js',
+      cwd: '/app',
       instances: 1,
       exec_mode: 'fork',
       env: {
@@ -101,9 +99,8 @@ module.exports = {
     },
     {
       name: 'wiki',
-      script: 'yarn',
-      args: 'start',
-      cwd: '/app/apps/wiki',
+      script: '/app/apps/wiki/.next/standalone/apps/wiki/server.js',
+      cwd: '/app',
       instances: 1,
       exec_mode: 'fork',
       env: {

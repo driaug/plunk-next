@@ -94,47 +94,16 @@ RUN mkdir -p \
     apps/wiki/.next/standalone
 
 # ============================================
-# Stage 3: Production Dependencies
-# ============================================
-FROM node:20-alpine AS prod-deps
-WORKDIR /app
-
-# No build dependencies needed - using prebuilt binaries
-
-# Enable Corepack and set Yarn version
-RUN corepack enable && corepack prepare yarn@4.9.1 --activate
-
-# Copy Yarn configuration
-COPY --from=deps /app/.yarn ./.yarn
-COPY --from=deps /app/.yarnrc.yml ./
-COPY --from=deps /app/package.json ./
-COPY --from=deps /app/yarn.lock ./
-
-# Copy all package.json files
-COPY package.json yarn.lock ./
-COPY apps/api/package.json ./apps/api/
-COPY apps/web/package.json ./apps/web/
-COPY apps/landing/package.json ./apps/landing/
-COPY apps/wiki/package.json ./apps/wiki/
-COPY packages/db/package.json ./packages/db/
-COPY packages/ui/package.json ./packages/ui/
-COPY packages/shared/package.json ./packages/shared/
-COPY packages/types/package.json ./packages/types/
-COPY packages/email/package.json ./packages/email/
-COPY packages/typescript-config/package.json ./packages/typescript-config/
-COPY packages/eslint-config/package.json ./packages/eslint-config/
-
-# Install production dependencies only
-# Use cache mounts for Yarn cache
-RUN --mount=type=cache,target=/root/.yarn/berry/cache,sharing=locked \
-    --mount=type=cache,target=/root/.cache/yarn,sharing=locked \
-    yarn workspaces focus --production && yarn cache clean
-
-# ============================================
-# Stage 4: Production Runtime
+# Stage 3: Production Runtime
 # ============================================
 FROM node:20-alpine AS runner
 WORKDIR /app
+
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
+
+# Enable Corepack and set Yarn version (must be before PM2 install)
+RUN corepack enable && corepack prepare yarn@4.9.1 --activate
 
 # Install PM2 globally for process management (when running all services)
 RUN npm install -g pm2
@@ -166,8 +135,12 @@ COPY --from=builder --chown=plunk:nodejs /app/apps/web/public ./apps/web/public
 COPY --from=builder --chown=plunk:nodejs /app/apps/landing/public ./apps/landing/public
 COPY --from=builder --chown=plunk:nodejs /app/apps/wiki/public ./apps/wiki/public
 
-# Copy production-only node_modules from prod-deps stage
-COPY --from=prod-deps --chown=plunk:nodejs /app/node_modules ./node_modules
+# Copy node_modules from deps stage (includes all dependencies)
+COPY --from=deps --chown=plunk:nodejs /app/node_modules ./node_modules
+
+# Copy Prisma client from builder stage (regenerated with correct ESM format)
+COPY --from=builder --chown=plunk:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=plunk:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 # Copy shared packages
 COPY --from=builder --chown=plunk:nodejs /app/packages ./packages
