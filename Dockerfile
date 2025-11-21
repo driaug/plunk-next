@@ -11,13 +11,8 @@ ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 WORKDIR /app
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++ \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Enable Corepack and set Yarn version
 RUN corepack enable && corepack prepare yarn@4.9.1 --activate
@@ -99,8 +94,7 @@ RUN mkdir -p \
 FROM node:20-alpine AS prod-deps
 WORKDIR /app
 
-# Install build dependencies needed for native modules
-RUN apk add --no-cache python3 make g++
+# No build dependencies needed - using prebuilt binaries
 
 # Enable Corepack and set Yarn version
 RUN corepack enable && corepack prepare yarn@4.9.1 --activate
