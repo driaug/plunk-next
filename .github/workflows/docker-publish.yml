@@ -77,13 +77,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          provenance: false  # Disable provenance for faster builds
-          sbom: false        # Disable SBOM for faster builds
           build-args: |
             BUILDTIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
             VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
             REVISION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
-        timeout-minutes: 90  # ARM64 with QEMU can take longer
 
       - name: Generate artifact attestation
         if: github.event_name != 'pull_request'
