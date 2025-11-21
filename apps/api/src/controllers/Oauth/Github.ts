@@ -1,7 +1,13 @@
 import {Controller, Get} from '@overnightjs/core';
 import type {Request, Response} from 'express';
 
-import {API_URI, DASHBOARD_URI, GITHUB_OAUTH_CLIENT, GITHUB_OAUTH_SECRET} from '../../app/constants.js';
+import {
+  API_URI,
+  DASHBOARD_URI,
+  GITHUB_OAUTH_CLIENT,
+  GITHUB_OAUTH_ENABLED,
+  GITHUB_OAUTH_SECRET,
+} from '../../app/constants.js';
 import {prisma} from '../../database/prisma.js';
 import {jwt} from '../../middleware/auth.js';
 import {UserService} from '../../services/UserService.js';
@@ -10,6 +16,10 @@ import {UserService} from '../../services/UserService.js';
 export class Github {
   @Get('outbound')
   public sendToOutbound(req: Request, res: Response) {
+    if (!GITHUB_OAUTH_ENABLED) {
+      return res.status(404).json({error: 'GitHub OAuth is not configured'});
+    }
+
     const OAUTH_QS = new URLSearchParams({
       client_id: GITHUB_OAUTH_CLIENT,
       redirect_uri: `${API_URI}/oauth/github/callback`,
@@ -22,6 +32,9 @@ export class Github {
 
   @Get('callback')
   public async callback(req: Request, res: Response) {
+    if (!GITHUB_OAUTH_ENABLED) {
+      return res.status(404).json({error: 'GitHub OAuth is not configured'});
+    }
     const {code} = req.query;
 
     const data = new URLSearchParams({

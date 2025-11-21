@@ -1,7 +1,13 @@
 import {Controller, Get} from '@overnightjs/core';
 import type {Request, Response} from 'express';
 
-import {API_URI, DASHBOARD_URI, GOOGLE_OAUTH_CLIENT, GOOGLE_OAUTH_SECRET} from '../../app/constants.js';
+import {
+  API_URI,
+  DASHBOARD_URI,
+  GOOGLE_OAUTH_CLIENT,
+  GOOGLE_OAUTH_ENABLED,
+  GOOGLE_OAUTH_SECRET,
+} from '../../app/constants.js';
 import {prisma} from '../../database/prisma.js';
 import {jwt} from '../../middleware/auth.js';
 import {UserService} from '../../services/UserService.js';
@@ -10,6 +16,10 @@ import {UserService} from '../../services/UserService.js';
 export class Google {
   @Get('outbound')
   public sendToOutbound(req: Request, res: Response) {
+    if (!GOOGLE_OAUTH_ENABLED) {
+      return res.status(404).json({error: 'Google OAuth is not configured'});
+    }
+
     return res.redirect(
       `https://accounts.google.com/o/oauth2/v2/auth?scope=https://www.googleapis.com/auth/userinfo.email&access_type=offline&include_granted_scopes=true&prompt=select_account&response_type=code&redirect_uri=${API_URI}/oauth/google/callback&client_id=${GOOGLE_OAUTH_CLIENT}`,
     );
@@ -17,6 +27,9 @@ export class Google {
 
   @Get('callback')
   public async callback(req: Request, res: Response) {
+    if (!GOOGLE_OAUTH_ENABLED) {
+      return res.status(404).json({error: 'Google OAuth is not configured'});
+    }
     const {code} = req.query;
 
     const data = new URLSearchParams({

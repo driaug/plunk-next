@@ -99,8 +99,8 @@ RUN mkdir -p \
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install OpenSSL for Prisma
-RUN apk add --no-cache openssl
+# Install OpenSSL for Prisma and curl for health checks
+RUN apk add --no-cache openssl curl
 
 # Enable Corepack and set Yarn version (must be before PM2 install)
 RUN corepack enable && corepack prepare yarn@4.9.1 --activate

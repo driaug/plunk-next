@@ -142,6 +142,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-platform
     if: github.event_name != 'pull_request'
+    outputs:
+      digest: ${{ steps.inspect.outputs.digest }}
+      version: ${{ steps.meta.outputs.version }}
     permissions:
       contents: read
       packages: write
@@ -229,6 +232,9 @@ jobs:
     needs: create-manifest
     if: github.event_name != 'pull_request'
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -236,20 +242,31 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Test image (smoke test)
+      - name: Extract metadata for testing
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Pull built image
+        run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.create-manifest.outputs.digest }}
+
+      - name: Run comprehensive smoke test
+        env:
+          PLUNK_IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.create-manifest.outputs.digest }}
         run: |
-          echo "Running smoke test..."
-          # Pull the built image
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          chmod +x smoke-test.sh
+          ./smoke-test.sh
 
-          # Test that the image can start each service
-          echo "Testing API service..."
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest sh -c "test -f /app/apps/api/dist/app.js"
-
-          echo "Testing Worker service..."
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest sh -c "test -f /app/apps/api/dist/jobs/worker.js"
-
-          echo "Testing Web service..."
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest sh -c "test -d /app/apps/web/.next"
-
-          echo "Smoke test passed! ✅"
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          echo "📋 Smoke test failed. Showing logs..."
+          docker compose -f docker-compose.smoke-test.yml logs

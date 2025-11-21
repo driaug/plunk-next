@@ -30,11 +30,14 @@ export const API_URI = validateEnv('API_URI');
 export const DASHBOARD_URI = validateEnv('DASHBOARD_URI');
 export const LANDING_URI = validateEnv('LANDING_URI');
 
-// AWS
-export const AWS_CLOUDFRONT_DISTRIBUTION_ID = validateEnv('AWS_CLOUDFRONT_DISTRIBUTION_ID');
-export const AWS_S3_ACCESS_KEY_ID = validateEnv('AWS_S3_ACCESS_KEY_ID');
-export const AWS_S3_ACCESS_KEY_SECRET = validateEnv('AWS_S3_ACCESS_KEY_SECRET');
-export const AWS_S3_BUCKET = validateEnv('AWS_S3_BUCKET');
+// AWS S3 (optional - for file uploads)
+export const AWS_CLOUDFRONT_DISTRIBUTION_ID = validateEnv('AWS_CLOUDFRONT_DISTRIBUTION_ID', '');
+export const AWS_S3_ACCESS_KEY_ID = validateEnv('AWS_S3_ACCESS_KEY_ID', '');
+export const AWS_S3_ACCESS_KEY_SECRET = validateEnv('AWS_S3_ACCESS_KEY_SECRET', '');
+export const AWS_S3_BUCKET = validateEnv('AWS_S3_BUCKET', '');
+export const S3_ENABLED = AWS_S3_ACCESS_KEY_ID !== '' && AWS_S3_ACCESS_KEY_SECRET !== '' && AWS_S3_BUCKET !== '';
+
+// AWS SES (required for email sending)
 export const AWS_SES_REGION = validateEnv('AWS_SES_REGION');
 export const AWS_SES_ACCESS_KEY_ID = validateEnv('AWS_SES_ACCESS_KEY_ID');
 export const AWS_SES_SECRET_ACCESS_KEY = validateEnv('AWS_SES_SECRET_ACCESS_KEY');
@@ -44,11 +47,14 @@ export const REDIS_URL = validateEnv('REDIS_URL');
 export const DATABASE_URL = validateEnv('DATABASE_URL');
 export const DIRECT_DATABASE_URL = validateEnv('DIRECT_DATABASE_URL');
 
-// OAuth
-export const GITHUB_OAUTH_CLIENT = validateEnv('GITHUB_OAUTH_CLIENT');
-export const GITHUB_OAUTH_SECRET = validateEnv('GITHUB_OAUTH_SECRET');
-export const GOOGLE_OAUTH_CLIENT = validateEnv('GOOGLE_OAUTH_CLIENT');
-export const GOOGLE_OAUTH_SECRET = validateEnv('GOOGLE_OAUTH_SECRET');
+// OAuth (optional - for social login)
+export const GITHUB_OAUTH_CLIENT = validateEnv('GITHUB_OAUTH_CLIENT', '');
+export const GITHUB_OAUTH_SECRET = validateEnv('GITHUB_OAUTH_SECRET', '');
+export const GITHUB_OAUTH_ENABLED = GITHUB_OAUTH_CLIENT !== '' && GITHUB_OAUTH_SECRET !== '';
+
+export const GOOGLE_OAUTH_CLIENT = validateEnv('GOOGLE_OAUTH_CLIENT', '');
+export const GOOGLE_OAUTH_SECRET = validateEnv('GOOGLE_OAUTH_SECRET', '');
+export const GOOGLE_OAUTH_ENABLED = GOOGLE_OAUTH_CLIENT !== '' && GOOGLE_OAUTH_SECRET !== '';
 
 // Stripe (optional - if not set, billing features are disabled)
 export const STRIPE_SK = validateEnv('STRIPE_SK', '');
