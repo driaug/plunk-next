@@ -8,6 +8,16 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
+# Install build dependencies for native modules (bcrypt, sharp, esbuild, etc.)
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    gcc \
+    musl-dev \
+    libc6-compat \
+    vips-dev
+
 # Enable Corepack and set Yarn version
 RUN corepack enable && corepack prepare yarn@4.9.1 --activate
 
@@ -39,6 +49,11 @@ COPY apps/wiki/next.config.mjs ./apps/wiki/next.config.mjs
 COPY apps/wiki/tsconfig.json ./apps/wiki/tsconfig.json
 
 # Install dependencies
+# Set environment variables to optimize native module builds for ARM64
+ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1 \
+    ESBUILD_BINARY_PATH=/usr/local/bin/esbuild \
+    npm_config_build_from_source=true
+
 RUN yarn install
 
 # ============================================
@@ -46,6 +61,11 @@ RUN yarn install
 # ============================================
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Install build dependencies needed for Prisma and build process
+RUN apk add --no-cache \
+    openssl \
+    libc6-compat
 
 # Enable Corepack and set Yarn version
 RUN corepack enable && corepack prepare yarn@4.9.1 --activate
