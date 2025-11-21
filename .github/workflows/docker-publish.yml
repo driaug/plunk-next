@@ -186,9 +186,9 @@ jobs:
       - name: Inspect image and get digest
         id: inspect
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
           DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} --format '{{.Manifest.Digest}}')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          echo "Manifest digest: $DIGEST"
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
