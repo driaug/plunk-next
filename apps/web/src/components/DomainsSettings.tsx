@@ -290,12 +290,12 @@ export function DomainsSettings({projectId}: DomainsSettingsProps) {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleCheckVerification(domain.id)}
-                          disabled={checkingVerification === domain.id || cooldownSeconds[domain.id] > 0}
+                          disabled={checkingVerification === domain.id || (cooldownSeconds[domain.id] ?? 0) > 0}
                           className="min-w-[80px]"
                         >
                           {checkingVerification === domain.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : cooldownSeconds[domain.id] > 0 ? (
+                          ) : (cooldownSeconds[domain.id] ?? 0) > 0 ? (
                             <span className="text-xs">{cooldownSeconds[domain.id]}s</span>
                           ) : (
                             <RefreshCw className="h-4 w-4" />
