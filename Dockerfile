@@ -5,14 +5,18 @@
 # ============================================
 # Stage 1: Dependencies
 # ============================================
-FROM node:20-slim AS deps
+# Use build platform (AMD64) to install dependencies, avoiding QEMU issues
+FROM --platform=$BUILDPLATFORM node:20-slim AS deps
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
 WORKDIR /app
 
-# Install build dependencies for native modules (works reliably on Debian)
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Enable Corepack and set Yarn version
@@ -45,13 +49,16 @@ COPY apps/wiki/mdx-components.tsx ./apps/wiki/mdx-components.tsx
 COPY apps/wiki/next.config.mjs ./apps/wiki/next.config.mjs
 COPY apps/wiki/tsconfig.json ./apps/wiki/tsconfig.json
 
-# Install dependencies
-RUN yarn install
+# Install dependencies (runs on build platform, fetches binaries for target platform)
+RUN echo "Building on $BUILDPLATFORM for $TARGETPLATFORM" && \
+    yarn install --immutable
 
 # ============================================
 # Stage 2: Builder
 # ============================================
+# Builder runs on target platform to generate platform-specific artifacts
 FROM node:20-slim AS builder
+ARG TARGETPLATFORM
 WORKDIR /app
 
 # Install OpenSSL for Prisma
