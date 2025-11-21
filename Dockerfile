@@ -31,9 +31,15 @@ COPY packages/email/package.json ./packages/email/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY packages/eslint-config/package.json ./packages/eslint-config/
 
+# Copy wiki source files for postinstall script (fumadocs-mdx)
+COPY apps/wiki/content ./apps/wiki/content
+COPY apps/wiki/source.config.ts ./apps/wiki/source.config.ts
+COPY apps/wiki/mdx-components.tsx ./apps/wiki/mdx-components.tsx
+COPY apps/wiki/next.config.mjs ./apps/wiki/next.config.mjs
+COPY apps/wiki/tsconfig.json ./apps/wiki/tsconfig.json
+
 # Install dependencies
-# Use --ignore-scripts since we don't have source files yet (needed for postinstall scripts)
-RUN yarn install --ignore-scripts
+RUN yarn install
 
 # ============================================
 # Stage 2: Builder
@@ -53,9 +59,6 @@ COPY --from=deps /app/yarn.lock ./
 
 # Copy source code
 COPY . .
-
-# Rebuild to run any postinstall scripts that need source files (e.g., fumadocs-mdx)
-RUN yarn install
 
 # Generate Prisma client
 RUN yarn workspace @repo/db db:generate
