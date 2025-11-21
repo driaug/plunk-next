@@ -2,7 +2,7 @@ import {Controller, Delete, Get, Middleware, Patch, Post} from '@overnightjs/cor
 import type {Request, Response} from 'express';
 
 import type {AuthResponse} from '../middleware/auth.js';
-import {requireProjectAccess} from '../middleware/auth.js';
+import {requireAuth} from '../middleware/auth.js';
 import {TemplateService} from '../services/TemplateService.js';
 
 @Controller('templates')
@@ -12,7 +12,7 @@ export class Templates {
    * List all templates for the authenticated project
    */
   @Get('')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async list(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const page = parseInt(req.query.page as string) || 1;
@@ -30,7 +30,7 @@ export class Templates {
    * Get a specific template by ID
    */
   @Get(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async get(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const templateId = req.params.id;
@@ -49,7 +49,7 @@ export class Templates {
    * Create a new template
    */
   @Post('')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async create(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {name, description, subject, body, from, replyTo, type} = req.body;
@@ -88,7 +88,7 @@ export class Templates {
    * Update a template
    */
   @Patch(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async update(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const templateId = req.params.id;
@@ -116,7 +116,7 @@ export class Templates {
    * Delete a template
    */
   @Delete(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async delete(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const templateId = req.params.id;
@@ -135,7 +135,7 @@ export class Templates {
    * Get template usage statistics
    */
   @Get(':id/usage')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async getUsage(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const templateId = req.params.id;

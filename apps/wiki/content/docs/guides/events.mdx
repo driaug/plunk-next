@@ -1,0 +1,192 @@
+---
+title: Events
+description: Track custom events and user behavior
+---
+
+## Overview
+
+Events allow you to track custom user actions and behavior. Use events to trigger workflows, segment audiences, and analyze user engagement.
+
+## Tracking Events
+
+### Via Public API
+
+```bash
+curl -X POST https://api.useplunk.com/v1/track \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "event": "purchase",
+    "data": {
+      "product": "Premium Plan",
+      "amount": 99.00,
+      "currency": "USD"
+    }
+  }'
+```
+
+This will:
+1. Upsert the contact with the email
+2. Track the "purchase" event
+3. Trigger any workflows listening for this event
+
+### Via Events API
+
+```bash
+curl -X POST https://api.useplunk.com/events/track \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contactId": "contact_id",
+    "event": "page_view",
+    "data": {
+      "page": "/pricing",
+      "source": "google"
+    }
+  }'
+```
+
+## Event Structure
+
+Each event has:
+
+- **event**: Event name (string)
+- **contactId**: Associated contact
+- **data**: Custom JSON data
+- **createdAt**: Timestamp
+
+## Common Event Types
+
+### User Actions
+
+- `user.signed_up` - New user registration
+- `user.logged_in` - User login
+- `user.updated_profile` - Profile update
+- `user.deleted_account` - Account deletion
+
+### Purchase Events
+
+- `purchase` - Completed purchase
+- `subscription.created` - New subscription
+- `subscription.renewed` - Subscription renewal
+- `subscription.cancelled` - Subscription cancellation
+
+### Engagement Events
+
+- `page_view` - Page visit
+- `button_click` - Button interaction
+- `video_watched` - Video engagement
+- `file_downloaded` - File download
+
+### Product Events
+
+- `feature_used` - Feature usage
+- `onboarding_completed` - Onboarding finish
+- `trial_started` - Trial beginning
+- `trial_ended` - Trial expiration
+
+## Using Events
+
+### Trigger Workflows
+
+Create workflows that start when events occur:
+
+```json
+{
+  "triggerType": "EVENT",
+  "triggerConfig": {
+    "eventName": "purchase"
+  }
+}
+```
+
+### Segment Audiences
+
+Filter contacts by event activity:
+
+```json
+{
+  "conditions": [
+    {
+      "field": "events.purchase",
+      "operator": "exists",
+      "value": true
+    }
+  ]
+}
+```
+
+### Analytics
+
+Analyze event trends over time via the analytics dashboard.
+
+## Managing Events
+
+### List Events
+
+```bash
+curl -X GET "https://api.useplunk.com/events?limit=100" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Get Event Names
+
+```bash
+curl -X GET https://api.useplunk.com/events/names \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Get Contact Events
+
+```bash
+curl -X GET https://api.useplunk.com/events/contact/contact_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Event Statistics
+
+```bash
+curl -X GET https://api.useplunk.com/events/stats \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+## Best Practices
+
+### 1. Use Consistent Naming
+
+- Use lowercase with underscores: `user_signed_up`
+- Be descriptive: `video_watched` not `vw`
+- Group related events: `purchase.*`, `user.*`
+
+### 2. Include Relevant Data
+
+```json
+{
+  "event": "purchase",
+  "data": {
+    "product": "Premium Plan",
+    "amount": 99.00,
+    "currency": "USD",
+    "paymentMethod": "credit_card"
+  }
+}
+```
+
+### 3. Track Key Milestones
+
+Focus on events that indicate user intent or value:
+- Sign ups
+- Feature usage
+- Purchases
+- Engagement actions
+
+### 4. Don't Over-Track
+
+Avoid tracking every click. Focus on meaningful actions.
+
+## Next Steps
+
+- [Build event-triggered workflows](/guides/workflows)
+- [Set up webhooks](/guides/webhooks)
+- [Analyze event data](/guides/analytics)

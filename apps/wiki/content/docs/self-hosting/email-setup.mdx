@@ -1,0 +1,233 @@
+---
+title: Email Setup (AWS SES)
+description: Configure AWS SES for email delivery
+---
+
+## Prerequisites
+
+- AWS account
+- AWS SES access
+- Domain ownership (for custom domains)
+
+## AWS SES Setup
+
+### 1. Create AWS Account
+
+Sign up at [aws.amazon.com](https://aws.amazon.com)
+
+### 2. Request Production Access
+
+By default, SES is in sandbox mode (limited to verified addresses).
+
+1. Go to AWS SES Console
+2. Click "Request production access"
+3. Fill out the form
+4. Wait for approval (usually 24-48 hours)
+
+### 3. Create IAM User
+
+Create dedicated IAM user for Plunk:
+
+1. Go to IAM Console
+2. Create new user: "plunk-ses"
+3. Attach policy: `AmazonSESFullAccess`
+4. Create access keys
+5. Save access key ID and secret key
+
+### 4. Configure Environment Variables
+
+```bash
+AWS_SES_REGION="us-east-1"
+AWS_SES_ACCESS_KEY_ID="your-access-key-id"
+AWS_SES_SECRET_ACCESS_KEY="your-secret-access-key"
+```
+
+## Verify Email Addresses
+
+### Single Email
+
+```bash
+aws ses verify-email-identity --email-address hello@yourdomain.com
+```
+
+Check your inbox and click verification link.
+
+### Domain Verification
+
+1. Go to SES Console → Verified Identities
+2. Click "Create identity"
+3. Choose "Domain"
+4. Enter your domain: `yourdomain.com`
+5. Add DNS records provided by AWS
+
+DNS records (example):
+```
+Type: TXT
+Name: _amazonses.yourdomain.com
+Value: provided-by-aws
+```
+
+Wait for verification (up to 72 hours).
+
+## Configuration Sets
+
+Create configuration sets for tracking:
+
+### 1. Tracking Configuration Set
+
+```bash
+aws ses create-configuration-set \
+  --configuration-set-name plunk-tracking
+```
+
+### 2. No-Tracking Configuration Set
+
+```bash
+aws ses create-configuration-set \
+  --configuration-set-name plunk-no-tracking
+```
+
+### 3. Update Environment
+
+```bash
+SES_CONFIGURATION_SET="plunk-tracking"
+SES_CONFIGURATION_SET_NO_TRACKING="plunk-no-tracking"
+```
+
+## SNS for Email Events
+
+Set up SNS to receive email events (opens, clicks, bounces):
+
+### 1. Create SNS Topic
+
+```bash
+aws sns create-topic --name plunk-email-events
+```
+
+### 2. Subscribe Plunk Webhook
+
+```bash
+aws sns subscribe \
+  --topic-arn arn:aws:sns:us-east-1:123456789:plunk-email-events \
+  --protocol https \
+  --notification-endpoint https://api.yourdomain.com/webhooks/sns
+```
+
+### 3. Configure SES Event Publishing
+
+1. Go to SES Console → Configuration Sets
+2. Select `plunk-tracking`
+3. Add destination → SNS
+4. Select your SNS topic
+5. Enable events: Delivery, Bounce, Complaint, Open, Click
+
+## DKIM Setup
+
+Enable DKIM signing for better deliverability:
+
+1. Go to SES Console → Verified Identities
+2. Select your domain
+3. Enable "Easy DKIM"
+4. Add CNAME records to your DNS
+
+```
+Type: CNAME
+Name: xxx._domainkey.yourdomain.com
+Value: xxx.dkim.amazonses.com
+```
+
+Repeat for all 3 CNAME records provided.
+
+## Sending Limits
+
+### Sandbox Mode
+
+- 200 emails/day
+- 1 email/second
+- Only verified addresses
+
+### Production Mode
+
+- 50,000 emails/day (initial)
+- 14 emails/second
+- Any address
+- Limits increase automatically based on usage
+
+## Testing Email Delivery
+
+```bash
+curl -X POST https://api.useplunk.com/v1/send \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "test@example.com",
+    "subject": "Test Email",
+    "body": "Hello from Plunk!",
+    "subscribed": true
+  }'
+```
+
+Check AWS SES Console → Email sending → Sending statistics.
+
+## Monitoring
+
+### SES Dashboard
+
+View in AWS Console:
+- Sends
+- Bounces
+- Complaints
+- Reputation
+
+### CloudWatch Metrics
+
+Set up alarms for:
+- Bounce rate > 5%
+- Complaint rate > 0.1%
+- Send quota utilization > 80%
+
+## Troubleshooting
+
+### Emails in sandbox mode only
+
+Request production access via SES Console.
+
+### Domain not verified
+
+Check DNS records and wait for propagation (up to 72 hours).
+
+### High bounce rate
+
+- Clean your contact list
+- Use double opt-in
+- Remove hard bounces immediately
+
+### Low reputation score
+
+- Reduce bounce and complaint rates
+- Send only to engaged users
+- Implement feedback loops
+
+## Best Practices
+
+1. **Warm up gradually**: Start with low volume, increase slowly
+2. **Monitor metrics**: Watch bounces and complaints closely
+3. **Clean lists**: Remove inactive and bounced addresses
+4. **Use DKIM**: Enable for better deliverability
+5. **Segment sends**: Don't send same content to everyone
+
+## Cost Optimization
+
+- First 62,000 emails/month: **FREE** (from EC2)
+- Additional: **$0.10 per 1,000 emails**
+- Data transfer: **$0.12 per GB**
+
+Example:
+- 100,000 emails/month: ~$3.80/month
+- 1,000,000 emails/month: ~$94/month
+
+## Next Steps
+
+- [Complete environment setup](/self-hosting/environment-variables)
+- [Deploy with Docker](/self-hosting/docker)
+- [Send your first email](/getting-started/quick-start)

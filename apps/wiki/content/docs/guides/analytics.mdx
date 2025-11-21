@@ -1,0 +1,113 @@
+---
+title: Analytics
+description: Track and analyze email performance
+---
+
+## Overview
+
+Plunk provides comprehensive analytics for tracking email performance across campaigns, workflows, and transactional emails.
+
+## Metrics Tracked
+
+### Delivery Metrics
+
+- **Sent**: Total emails sent
+- **Delivered**: Successfully delivered
+- **Bounced**: Failed delivery (hard/soft)
+
+### Engagement Metrics
+
+- **Opens**: Unique email opens
+- **Clicks**: Unique link clicks
+- **Unsubscribes**: Opt-outs
+
+### Quality Metrics
+
+- **Complaints**: Spam reports
+- **Open Rate**: (Opens / Delivered) × 100
+- **Click Rate**: (Clicks / Delivered) × 100
+- **Bounce Rate**: (Bounces / Sent) × 100
+
+## Time Series Analytics
+
+Get daily email metrics over time:
+
+```bash
+curl -X GET "https://api.useplunk.com/analytics/timeseries?startDate=2024-01-01&endDate=2024-03-15" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "date": "2024-01-01",
+      "sent": 1000,
+      "delivered": 980,
+      "opened": 350,
+      "clicked": 85,
+      "bounced": 20
+    }
+  ]
+}
+```
+
+## Campaign Analytics
+
+Get performance metrics for specific campaigns:
+
+```bash
+curl -X GET https://api.useplunk.com/campaigns/campaign_id/stats \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+## Top Campaigns
+
+See your best-performing campaigns:
+
+```bash
+curl -X GET "https://api.useplunk.com/analytics/top-campaigns?limit=10" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+## Benchmarks
+
+Industry averages:
+
+- **Open Rate**: 15-25%
+- **Click Rate**: 2-5%
+- **Bounce Rate**: < 2%
+- **Unsubscribe Rate**: < 0.5%
+- **Complaint Rate**: < 0.1%
+
+## Improving Metrics
+
+### Boost Open Rates
+
+- Write compelling subject lines
+- Optimize send timing
+- Clean your list regularly
+- Build sender reputation
+
+### Increase Click Rates
+
+- Clear call-to-action
+- Relevant content
+- Mobile-responsive design
+- A/B test CTAs
+
+### Reduce Bounces
+
+- Verify email addresses
+- Remove hard bounces immediately
+- Monitor soft bounce patterns
+- Use double opt-in
+
+## Next Steps
+
+- [Optimize campaigns](/guides/campaigns)
+- [A/B test templates](/guides/templates)
+- [Segment audiences](/guides/segments)

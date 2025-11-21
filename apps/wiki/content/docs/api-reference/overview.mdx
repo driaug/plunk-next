@@ -1,0 +1,125 @@
+---
+title: API Overview
+description: Complete Plunk API reference
+---
+
+## Base URL
+
+```
+https://api.useplunk.com
+```
+
+## Authentication
+
+All API requests require authentication using your API key:
+
+```bash
+curl -X GET https://api.useplunk.com/endpoint \
+  -H "Authorization: Bearer sk_your_secret_key"
+```
+
+## Request Format
+
+All POST/PUT/PATCH requests should use JSON:
+
+```bash
+curl -X POST https://api.useplunk.com/endpoint \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{"key": "value"}'
+```
+
+## Response Format
+
+### Success Response
+
+```json
+{
+  "success": true,
+  "data": {
+    ...
+  }
+}
+```
+
+### Error Response
+
+```json
+{
+  "code": 400,
+  "error": "Bad Request",
+  "message": "Specific error message",
+  "time": 1234567890
+}
+```
+
+## Pagination
+
+List endpoints support cursor-based pagination:
+
+```bash
+GET /contacts?limit=100&cursor=abc123
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [...],
+    "nextCursor": "def456",
+    "hasMore": true,
+    "total": 10000
+  }
+}
+```
+
+## Rate Limiting
+
+- Email sending: 14 emails/second (AWS SES default)
+- API requests: Reasonable limits per endpoint
+- Bulk operations: Automatically queued
+
+## API Endpoints
+
+### Contacts
+- [GET /contacts](/api-reference/contacts-api#list-contacts)
+- [POST /contacts](/api-reference/contacts-api#create-contact)
+- [GET /contacts/:id](/api-reference/contacts-api#get-contact)
+- [PATCH /contacts/:id](/api-reference/contacts-api#update-contact)
+- [DELETE /contacts/:id](/api-reference/contacts-api#delete-contact)
+
+### Templates
+- [GET /templates](/api-reference/templates-api#list-templates)
+- [POST /templates](/api-reference/templates-api#create-template)
+- [GET /templates/:id](/api-reference/templates-api#get-template)
+- [PATCH /templates/:id](/api-reference/templates-api#update-template)
+- [DELETE /templates/:id](/api-reference/templates-api#delete-template)
+
+### Campaigns
+- [GET /campaigns](/api-reference/campaigns-api#list-campaigns)
+- [POST /campaigns](/api-reference/campaigns-api#create-campaign)
+- [POST /campaigns/:id/send](/api-reference/campaigns-api#send-campaign)
+
+### Segments
+- [GET /segments](/api-reference/segments-api#list-segments)
+- [POST /segments](/api-reference/segments-api#create-segment)
+
+### Workflows
+- [GET /workflows](/api-reference/workflows-api#list-workflows)
+- [POST /workflows](/api-reference/workflows-api#create-workflow)
+
+### Events
+- [POST /events/track](/api-reference/events-api#track-event)
+- [GET /events](/api-reference/events-api#list-events)
+
+### Public API
+- [POST /v1/send](/api-reference/public-api#send-email)
+- [POST /v1/track](/api-reference/public-api#track-event)
+
+## Next Steps
+
+- [Explore individual endpoints](/api-reference/contacts-api)
+- [View error codes](/api-reference/errors)
+- [Get started with the API](/getting-started/quick-start)

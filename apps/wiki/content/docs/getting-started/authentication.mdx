@@ -1,0 +1,151 @@
+---
+title: Authentication
+description: Learn how to authenticate with the Plunk API
+---
+
+## API Key Authentication
+
+API keys are used for authenticating with the Plunk API. Each project has two types of API keys:
+
+#### Public Key (pk_*)
+- Used for client-side applications
+- **Only works with the `/v1/track` endpoint** for tracking events
+- Safe to expose in frontend code
+- Cannot access any other endpoints
+
+#### Secret Key (sk_*)
+- Used for server-side applications
+- **Required for all API endpoints** (contacts, templates, campaigns, `/v1/send`, etc.)
+- **Never expose in client-side code**
+- Should be stored securely as environment variables
+
+## Using API Keys
+
+### Getting Your API Keys
+
+1. Log in to your Plunk dashboard
+2. Navigate to your project settings
+3. Find your API keys in the "API Keys" section
+4. Copy your secret key (it's only shown once)
+
+### Making Authenticated Requests
+
+#### Using Secret Key (All Endpoints)
+
+Provide your secret key using the `Authorization` header with Bearer token format:
+
+```javascript
+fetch('https://api.useplunk.com/v1/send', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer sk_your_secret_key_here',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    to: 'user@example.com',
+    subject: 'Hello World',
+    body: 'This is a test email'
+  })
+});
+```
+
+#### Using Public Key (Event Tracking Only)
+
+The public key can **only** be used with the `/v1/track` endpoint for client-side event tracking:
+
+```javascript
+fetch('https://api.useplunk.com/v1/track', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer pk_your_public_key_here',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    email: 'user@example.com',
+    event: 'button_clicked',
+    data: { button: 'signup' }
+  })
+});
+```
+
+## Security Best Practices
+
+### Keep Your Secret Keys Safe
+
+- **Never commit secret keys to version control**
+- Store them in environment variables
+- Use secrets management services in production
+- Rotate keys if they're compromised
+
+```bash
+# .env file
+PLUNK_SECRET_KEY=sk_your_secret_key_here
+```
+
+```javascript
+// In your code
+const apiKey = process.env.PLUNK_SECRET_KEY;
+```
+
+### Use Public Keys Only for Event Tracking
+
+If you need to track events from client-side code:
+
+- Use public keys (pk_*) for the `/v1/track` endpoint only
+- This is the only endpoint safe for client-side use
+- **Never use secret keys in frontend code**
+- For sending emails, always use server-side code with secret keys
+
+### Regenerate Compromised Keys
+
+If your secret key is compromised:
+
+1. Go to your project settings
+2. Click "Regenerate Keys"
+3. Update all applications with the new key
+4. The old key will be immediately revoked
+
+## Testing Your Authentication
+
+Test your API key with a simple request:
+
+```bash
+curl -X GET https://api.useplunk.com/contacts?limit=5 \
+  -H "Authorization: Bearer sk_your_secret_key_here"
+```
+
+If successful, you'll receive your contacts:
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [...],
+    "hasMore": false,
+    "total": 0
+  }
+}
+```
+
+## Common Errors
+
+### 401 Unauthorized
+
+- Check that your API key is correct
+- Ensure you're using the Bearer token format
+- Verify the key hasn't been regenerated
+
+### 403 Forbidden
+
+- Verify you have the correct role for the action
+- Check that you're a member of the project
+- Ensure you're using a secret key (not public) for protected endpoints
+
+## Next Steps
+
+Now that you're authenticated, you can:
+
+- [Send your first email](/getting-started/quick-start)
+- [Explore the API](/api-reference/overview)
+- [Manage contacts](/guides/contacts)
+- [Create campaigns](/guides/campaigns)

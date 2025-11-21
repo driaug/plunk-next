@@ -1,0 +1,115 @@
+---
+title: Custom Domains
+description: Send emails from your own domain
+---
+
+## Overview
+
+Custom domains allow you to send emails from your own domain (e.g., hello@yourdomain.com) instead of the default Plunk domain.
+
+## Requirements
+
+- Domain ownership
+- DNS access
+- AWS SES configured (for self-hosted)
+
+## Adding a Domain
+
+### Via Dashboard
+
+1. Navigate to **Settings > Domains**
+2. Click **Add Domain**
+3. Enter your domain name
+4. Follow DNS verification instructions
+
+### Via API
+
+```bash
+curl -X POST https://api.useplunk.com/domains \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "domain": "yourdomain.com"
+  }'
+```
+
+## DNS Verification
+
+After adding a domain, you'll receive DKIM tokens to add to your DNS:
+
+```
+Type: TXT
+Name: _domainkey.yourdomain.com
+Value: provided_by_plunk
+```
+
+Add these records to your DNS provider (Cloudflare, Route53, etc.)
+
+## Verifying Domain
+
+Plunk automatically checks verification status every 5 minutes.
+
+Manual check:
+
+```bash
+curl -X GET https://api.useplunk.com/domains/domain_id/verify \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+## Using Custom Domains
+
+Once verified, specify the `from` field when sending:
+
+```bash
+curl -X POST https://api.useplunk.com/v1/send \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "recipient@example.com",
+    "from": "hello@yourdomain.com",
+    "subject": "Hello from custom domain",
+    "body": "Email content here"
+  }'
+```
+
+## Managing Domains
+
+### List Domains
+
+```bash
+curl -X GET https://api.useplunk.com/domains/project/project_id \
+  -H "Authorization: Bearer sk_your_secret_key"
+```
+
+### Remove Domain
+
+```bash
+curl -X DELETE https://api.useplunk.com/domains/domain_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+## Troubleshooting
+
+### Verification Failing
+
+- Check DNS records are correct
+- Wait for DNS propagation (up to 48 hours)
+- Ensure no conflicting DKIM records
+
+### Emails Not Sending
+
+- Verify domain is verified
+- Check AWS SES quotas (if self-hosted)
+- Review sender reputation
+
+## Best Practices
+
+- Use subdomains for different email types (marketing.yourdomain.com, transactional.yourdomain.com)
+- Maintain good sending practices
+- Monitor bounce and complaint rates
+- Warm up new domains gradually
+
+## Next Steps
+
+- [Send emails from custom domain](/getting-started/quick-start)
+- [Configure AWS SES](/self-hosting/email-setup)

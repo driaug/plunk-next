@@ -2,7 +2,7 @@ import {Controller, Middleware, Post} from '@overnightjs/core';
 import type {Request, Response} from 'express';
 
 import type {AuthResponse} from '../middleware/auth.js';
-import {requireApiKey} from '../middleware/auth.js';
+import {requirePublicKey, requireSecretKey} from '../middleware/auth.js';
 import {ContactService} from '../services/ContactService.js';
 import {EmailService} from '../services/EmailService.js';
 import {EventService} from '../services/EventService.js';
@@ -30,7 +30,7 @@ export class Actions {
    * - timestamp: string - ISO timestamp
    */
   @Post('track')
-  @Middleware([requireApiKey])
+  @Middleware([requirePublicKey])
   public async track(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {event, email, subscribed, data} = req.body;
@@ -107,7 +107,7 @@ export class Actions {
    * - timestamp: string - ISO timestamp
    */
   @Post('send')
-  @Middleware([requireApiKey])
+  @Middleware([requireSecretKey])
   public async send(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {to, subject, body, subscribed, name, from, reply, headers, data} = req.body;

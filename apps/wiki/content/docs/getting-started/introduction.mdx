@@ -1,0 +1,149 @@
+---
+title: Introduction
+description: Get started with Plunk
+---
+
+## Welcome to Plunk
+
+Plunk is a powerful, open-source email platform that helps you manage transactional emails, marketing campaigns, and automated workflows at scale.
+
+## What can you do with Plunk?
+
+### Transactional Emails
+Send transactional emails like password resets, order confirmations, and notifications via a simple API. Plunk handles template rendering, variable substitution, and delivery tracking.
+
+```javascript
+// Send a transactional email
+await fetch('https://api.useplunk.com/v1/send', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    to: 'user@example.com',
+    subject: 'Welcome to our platform!',
+    body: 'Hello {{name}}, welcome aboard!',
+    subscribed: true,
+    data: {
+      name: 'John Doe'
+    }
+  })
+});
+```
+
+### Marketing Campaigns
+Create and send one-time email campaigns to your entire contact list or specific segments. Schedule campaigns for future delivery or send them immediately.
+
+### Automated Workflows
+Build sophisticated email automation with visual workflow builder. Create drip campaigns, onboarding sequences, and behavior-based emails that trigger based on user actions.
+
+### Contact Management
+Store and manage your contacts with custom fields. Import contacts from CSV files, segment them dynamically, and track their engagement.
+
+## Architecture Overview
+
+Plunk consists of several components:
+
+### API Server
+The Express.js-based API server handles all HTTP requests, including:
+- Contact management
+- Campaign creation and sending
+- Workflow management
+- Email template management
+- Analytics and reporting
+
+### Worker Process
+A separate BullMQ worker process handles background jobs:
+- Email sending with rate limiting
+- Campaign batch processing
+- CSV imports
+- Workflow execution
+- Segment computation
+- Domain verification
+
+### Database
+PostgreSQL database with Prisma ORM stores:
+- Contacts and their data
+- Email templates
+- Campaigns and workflows
+- Email tracking data
+- User accounts and projects
+
+### Queue System
+Redis-backed BullMQ provides reliable job queuing with:
+- Retry logic
+- Rate limiting
+- Job prioritization
+- Concurrency control
+
+### Email Delivery
+AWS SES handles actual email delivery with:
+- Domain verification (DKIM)
+- Bounce and complaint handling
+- Open and click tracking
+- Delivery webhooks
+
+## Core Concepts
+
+### Projects
+Projects are workspaces that contain all your contacts, templates, campaigns, and workflows. Each project has its own API keys and billing settings.
+
+### Contacts
+Contacts are individuals in your audience. Each contact has:
+- Email address (required, unique per project)
+- Subscribed status
+- Custom data fields (JSON)
+- Activity history
+
+### Templates
+Reusable email templates with variable substitution. Two types:
+- **Transactional**: For API-triggered emails (no unsubscribe)
+- **Marketing**: For campaigns and workflows (includes unsubscribe)
+
+### Segments
+Dynamic groups of contacts based on filters. Segments automatically update as contact data changes. Use segments to target specific audiences for campaigns.
+
+### Campaigns
+One-time email broadcasts sent to all contacts, a segment, or a filtered audience. Campaigns can be sent immediately or scheduled for future delivery.
+
+### Workflows
+Automated email sequences triggered by events or schedules. Workflows can include:
+- Email sends
+- Time delays
+- Conditional branching
+- Event waiting
+- Contact updates
+- Webhooks
+
+### Events
+Custom events tracked for contacts (e.g., "purchase", "login", "page_view"). Events can trigger workflows and be used in segment filters.
+
+## Authentication
+
+Plunk uses API keys for authentication:
+
+Each project has two types of API keys:
+- **Public Key** (pk_*): For client-side event tracking only (`/v1/track` endpoint)
+- **Secret Key** (sk_*): For all other API endpoints (required for server-side usage)
+
+## Rate Limits
+
+To ensure fair usage and system stability:
+- Email sending: 14 emails/second (AWS SES limit)
+- API requests: Reasonable rate limits per endpoint
+- Bulk operations: Automatically queued for background processing
+
+## Getting Help
+
+- **Documentation**: You're reading it
+- **API Reference**: Detailed endpoint documentation
+- **GitHub**: Source code and issue tracking
+- **Community**: Support channels
+
+## Next Steps
+
+Ready to get started? Continue with:
+- [Authentication](/getting-started/authentication) - Set up your API keys
+- [Quick Start](/getting-started/quick-start) - Send your first email
+- [API Reference](/api-reference/overview) - Explore the API

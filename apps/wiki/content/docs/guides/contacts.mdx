@@ -1,0 +1,444 @@
+---
+title: Contacts
+description: Manage your email contacts at scale
+---
+
+## Overview
+
+Contacts are the core of your email platform. Plunk allows you to manage millions of contacts with custom fields, CSV imports, and powerful querying capabilities.
+
+## Contact Structure
+
+Each contact in Plunk has:
+
+- **email**: Unique email address (required)
+- **subscribed**: Subscription status (boolean)
+- **id**: Unique identifier (auto-generated)
+- **data**: Custom JSON fields for any additional data
+- **createdAt**: When the contact was created
+- **updatedAt**: Last modification timestamp
+- **projectId**: Associated project
+
+## Creating Contacts
+
+### Create a Single Contact
+
+```bash
+curl -X POST https://api.useplunk.com/contacts \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "subscribed": true,
+    "data": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "company": "Acme Inc",
+      "role": "Developer",
+      "signupDate": "2024-01-15"
+    }
+  }'
+```
+
+### Upsert Behavior
+
+Creating a contact with an existing email will **update** that contact instead of creating a duplicate:
+
+```javascript
+// First call - creates contact
+await createContact({ email: 'user@example.com', data: { name: 'John' } });
+
+// Second call - updates the same contact
+await createContact({ email: 'user@example.com', data: { name: 'John Doe' } });
+```
+
+## Custom Data Fields
+
+Contacts can store arbitrary JSON data in the `data` field. This is perfect for:
+
+- User profile information
+- Preferences and settings
+- Purchase history
+- Engagement metrics
+- Custom attributes
+
+```json
+{
+  "email": "user@example.com",
+  "subscribed": true,
+  "data": {
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "company": "Tech Corp",
+    "plan": "premium",
+    "mrr": 99,
+    "lastLoginDate": "2024-01-20",
+    "preferences": {
+      "newsletter": true,
+      "productUpdates": false
+    },
+    "tags": ["vip", "early-adopter"]
+  }
+}
+```
+
+### Data Field Best Practices
+
+1. **Keep it flat when possible**: Nested objects work but flat structures are easier to query
+2. **Use consistent naming**: Stick to camelCase or snake_case
+3. **Store dates as ISO strings**: Makes filtering easier
+4. **Use numbers for numeric data**: Enables range queries
+5. **Consider GIN indexing**: For frequently queried JSON fields
+
+## Listing Contacts
+
+### Basic Listing
+
+```bash
+curl -X GET "https://api.useplunk.com/contacts?limit=20" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Cursor-Based Pagination
+
+For performance at scale, Plunk uses cursor-based pagination:
+
+```javascript
+let allContacts = [];
+let cursor = null;
+let hasMore = true;
+
+while (hasMore) {
+  const params = new URLSearchParams({ limit: 100 });
+  if (cursor) params.append('cursor', cursor);
+
+  const response = await fetch(
+    `https://api.useplunk.com/contacts?${params}`,
+    {
+      headers: {
+        'Authorization': 'Bearer sk_your_secret_key',
+      }
+    }
+  );
+
+  const data = await response.json();
+  allContacts.push(...data.data.items);
+  cursor = data.data.nextCursor;
+  hasMore = data.data.hasMore;
+}
+```
+
+### Filtering Contacts
+
+Filter by subscription status:
+
+```bash
+curl -X GET "https://api.useplunk.com/contacts?subscribed=true&limit=20" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+Search by email:
+
+```bash
+curl -X GET "https://api.useplunk.com/contacts?search=john@example.com" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+## Getting a Single Contact
+
+### By ID
+
+```bash
+curl -X GET "https://api.useplunk.com/contacts/contact_id" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### By Email
+
+```bash
+curl -X GET "https://api.useplunk.com/contacts?search=user@example.com&limit=1" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+## Updating Contacts
+
+### Update a Contact
+
+```bash
+curl -X PATCH https://api.useplunk.com/contacts/contact_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subscribed": true,
+    "data": {
+      "firstName": "Jane",
+      "plan": "enterprise"
+    }
+  }'
+```
+
+### Merging Data
+
+Updates merge with existing data rather than replacing it:
+
+```javascript
+// Original contact data
+{ "firstName": "John", "company": "Acme" }
+
+// Update with
+{ "lastName": "Doe", "role": "Developer" }
+
+// Resulting data
+{ "firstName": "John", "company": "Acme", "lastName": "Doe", "role": "Developer" }
+```
+
+### Updating Subscription Status
+
+```bash
+curl -X PATCH https://api.useplunk.com/contacts/contact_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subscribed": false
+  }'
+```
+
+## Deleting Contacts
+
+```bash
+curl -X DELETE https://api.useplunk.com/contacts/contact_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+**Warning**: Deletion is permanent and cannot be undone. Consider unsubscribing contacts instead.
+
+## CSV Import
+
+For bulk contact imports, use the CSV import feature.
+
+### Step 1: Prepare Your CSV
+
+Create a CSV file with email as the first column:
+
+```csv
+email,firstName,lastName,company,plan
+john@example.com,John,Doe,Acme Inc,premium
+jane@example.com,Jane,Smith,Tech Corp,free
+bob@example.com,Bob,Johnson,StartupXYZ,enterprise
+```
+
+### Step 2: Upload CSV
+
+```bash
+curl -X POST https://api.useplunk.com/contacts/import \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -F "file=@contacts.csv" \
+  -F "subscribed=true"
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "jobId": "import_job_123"
+  }
+}
+```
+
+### Step 3: Check Import Status
+
+```bash
+curl -X GET https://api.useplunk.com/contacts/import/import_job_123 \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "status": "completed",
+    "total": 1000,
+    "processed": 1000,
+    "errors": []
+  }
+}
+```
+
+### Import Notes
+
+- Email column is required
+- All other columns become data fields
+- Imports are processed asynchronously in the background
+- Large imports may take several minutes
+- Duplicates are automatically handled (upserted)
+- Invalid emails are skipped and reported in errors
+
+## Contact Fields
+
+### Get Available Fields
+
+Discover what fields your contacts have:
+
+```bash
+curl -X GET https://api.useplunk.com/contacts/fields \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": [
+    { "name": "email", "type": "string" },
+    { "name": "subscribed", "type": "boolean" },
+    { "name": "firstName", "type": "string" },
+    { "name": "lastName", "type": "string" },
+    { "name": "company", "type": "string" },
+    { "name": "plan", "type": "string" },
+    { "name": "mrr", "type": "number" }
+  ]
+}
+```
+
+### Get Field Values
+
+Get unique values for a specific field:
+
+```bash
+curl -X GET "https://api.useplunk.com/contacts/fields/plan/values" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": ["free", "premium", "enterprise"]
+}
+```
+
+## Public Contact Endpoints
+
+These endpoints don't require authentication and are used for subscription management.
+
+### Get Public Contact Info
+
+```bash
+curl -X GET https://api.useplunk.com/contacts/public/contact_id
+```
+
+### Subscribe a Contact
+
+```bash
+curl -X POST https://api.useplunk.com/contacts/public/contact_id/subscribe \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+### Unsubscribe a Contact
+
+```bash
+curl -X POST https://api.useplunk.com/contacts/public/contact_id/unsubscribe \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+These endpoints are automatically used in unsubscribe links in marketing emails.
+
+## Performance Considerations
+
+### At Scale (1M+ Contacts)
+
+Plunk is built to handle millions of contacts. Here's how:
+
+1. **Cursor-based pagination**: Never use large offsets
+2. **Indexed queries**: Email and common fields are indexed
+3. **Background processing**: Imports and bulk operations are queued
+4. **GIN indexes**: JSON field queries use PostgreSQL GIN indexes
+5. **Reasonable limits**: Max 100 contacts per page
+
+### Best Practices
+
+- Always use pagination for listing contacts
+- Use cursor-based pagination for exports
+- Run bulk operations during off-peak hours
+- Use segments for targeted queries
+- Cache frequently accessed contact data
+
+## Integration Examples
+
+### Sync with Your Database
+
+```javascript
+// Sync users from your database to Plunk
+async function syncUsers() {
+  const users = await db.users.findMany();
+
+  for (const user of users) {
+    await fetch('https://api.useplunk.com/contacts', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.PLUNK_SECRET_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: user.email,
+        subscribed: user.marketingOptIn,
+        data: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          plan: user.subscriptionTier,
+          signupDate: user.createdAt.toISOString()
+        }
+      })
+    });
+  }
+}
+```
+
+### Webhook Integration
+
+Update Plunk contacts when your user data changes:
+
+```javascript
+// After user updates their profile
+app.post('/api/users/:id/profile', async (req, res) => {
+  const user = await db.users.update({
+    where: { id: req.params.id },
+    data: req.body
+  });
+
+  // Sync to Plunk
+  await fetch('https://api.useplunk.com/contacts', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.PLUNK_SECRET_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email: user.email,
+      subscribed: user.marketingOptIn,
+      data: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        updatedAt: new Date().toISOString()
+      }
+    })
+  });
+
+  res.json(user);
+});
+```
+
+## Next Steps
+
+- [Create email templates](/guides/templates)
+- [Build dynamic segments](/guides/segments)
+- [Track custom events](/guides/events)
+- [Send campaigns](/guides/campaigns)

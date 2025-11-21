@@ -1,0 +1,95 @@
+---
+title: Webhooks
+description: Receive real-time notifications for email events
+---
+
+## Overview
+
+Webhooks allow you to receive real-time notifications when email events occur (deliveries, opens, clicks, bounces, complaints).
+
+## Webhook Events
+
+Plunk sends webhooks for:
+
+- **delivery** - Email successfully delivered
+- **open** - Email opened by recipient
+- **click** - Link clicked in email
+- **bounce** - Email bounced (hard or soft)
+- **complaint** - Recipient marked as spam
+
+## AWS SNS/SES Webhooks
+
+Plunk uses AWS SES for email delivery and receives events via SNS:
+
+### Endpoint
+
+```
+POST https://api.useplunk.com/webhooks/sns
+```
+
+### Configuration
+
+1. Set up SNS topic in AWS
+2. Subscribe to SES notifications
+3. Configure SNS to send to Plunk webhook endpoint
+
+## Stripe Webhooks
+
+For billing events (if using hosted version):
+
+### Endpoint
+
+```
+POST https://api.useplunk.com/webhooks/incoming/stripe
+```
+
+### Events Handled
+
+- `checkout.session.completed` - Payment completed
+- `invoice.paid` - Invoice paid
+- `subscription.deleted` - Subscription cancelled
+
+## Custom Webhook Steps
+
+Use workflows to send webhooks to your own endpoints:
+
+```json
+{
+  "type": "WEBHOOK",
+  "config": {
+    "url": "https://your-api.com/webhook",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer your_token",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "email": "{{email}}",
+      "event": "workflow_completed",
+      "data": {
+        "contactId": "{{id}}",
+        "workflowName": "{{workflowName}}"
+      }
+    }
+  }
+}
+```
+
+## Webhook Security
+
+### Verify Signatures
+
+Always verify webhook signatures to ensure requests are from Plunk.
+
+### Use HTTPS
+
+Only accept webhooks over HTTPS.
+
+### Validate Payload
+
+Check that the payload structure matches expectations.
+
+## Next Steps
+
+- [Track custom events](/guides/events)
+- [Build workflows with webhooks](/guides/workflows)

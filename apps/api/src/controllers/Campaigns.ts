@@ -4,7 +4,7 @@ import type {Request, Response} from 'express';
 
 import {HttpException} from '../exceptions/index.js';
 import type {AuthResponse} from '../middleware/auth.js';
-import {requireProjectAccess} from '../middleware/auth.js';
+import {requireAuth} from '../middleware/auth.js';
 import {CampaignService} from '../services/CampaignService.js';
 
 @Controller('campaigns')
@@ -14,7 +14,7 @@ export class Campaigns {
    * POST /campaigns
    */
   @Post('')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   private async create(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {name, description, subject, body, from, replyTo, audienceType, audienceFilter, segmentId} = req.body;
@@ -71,7 +71,7 @@ export class Campaigns {
    * GET /campaigns
    */
   @Get('')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   private async list(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const status = req.query.status as CampaignStatus | undefined;
@@ -103,7 +103,7 @@ export class Campaigns {
    * GET /campaigns/:id
    */
   @Get(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   private async get(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {id} = req.params;
@@ -121,7 +121,7 @@ export class Campaigns {
    * PUT /campaigns/:id
    */
   @Put(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   private async update(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {id} = req.params;
@@ -159,7 +159,7 @@ export class Campaigns {
    * DELETE /campaigns/:id
    */
   @Delete(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   private async delete(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {id} = req.params;
@@ -177,7 +177,7 @@ export class Campaigns {
    * POST /campaigns/:id/send
    */
   @Post(':id/send')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   private async send(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {id} = req.params;
@@ -207,7 +207,7 @@ export class Campaigns {
    * POST /campaigns/:id/cancel
    */
   @Post(':id/cancel')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   private async cancel(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {id} = req.params;
@@ -226,7 +226,7 @@ export class Campaigns {
    * GET /campaigns/:id/stats
    */
   @Get(':id/stats')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   private async stats(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {id} = req.params;

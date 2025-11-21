@@ -1,0 +1,161 @@
+---
+title: Error Codes
+description: API error codes and troubleshooting
+---
+
+## HTTP Status Codes
+
+### 200 OK
+Request successful.
+
+### 201 Created
+Resource created successfully.
+
+### 400 Bad Request
+Invalid request format or parameters.
+
+### 401 Unauthorized
+Authentication failed or missing.
+
+### 403 Forbidden
+Not authorized to access resource.
+
+### 404 Not Found
+Resource does not exist.
+
+### 429 Too Many Requests
+Rate limit exceeded.
+
+### 500 Internal Server Error
+Server error occurred.
+
+## Error Response Format
+
+```json
+{
+  "code": 400,
+  "error": "Bad Request",
+  "message": "Email is required",
+  "time": 1234567890
+}
+```
+
+## Common Errors
+
+### Authentication Errors
+
+#### Invalid API Key
+```json
+{
+  "code": 401,
+  "error": "Unauthorized",
+  "message": "Invalid API key"
+}
+```
+
+Solution: Check your API key is correct and starts with `sk_`.
+
+#### Missing X-Project-Id
+```json
+{
+  "code": 400,
+  "error": "Bad Request",
+  "message": "X-Project-Id header is required"
+}
+```
+
+Solution: Add `X-Project-Id` header to your request.
+
+### Validation Errors
+
+#### Missing Required Field
+```json
+{
+  "code": 400,
+  "error": "Bad Request",
+  "message": "Email is required"
+}
+```
+
+Solution: Ensure all required fields are provided.
+
+#### Invalid Email Format
+```json
+{
+  "code": 400,
+  "error": "Bad Request",
+  "message": "Invalid email address"
+}
+```
+
+Solution: Provide a valid email address.
+
+### Resource Errors
+
+#### Resource Not Found
+```json
+{
+  "code": 404,
+  "error": "Not Found",
+  "message": "Contact not found"
+}
+```
+
+Solution: Check the resource ID is correct.
+
+#### Duplicate Resource
+```json
+{
+  "code": 400,
+  "error": "Bad Request",
+  "message": "Contact with this email already exists"
+}
+```
+
+Solution: Use upsert behavior or update the existing resource.
+
+### Rate Limiting
+
+#### Rate Limit Exceeded
+```json
+{
+  "code": 429,
+  "error": "Too Many Requests",
+  "message": "Rate limit exceeded. Try again later."
+}
+```
+
+Solution: Implement exponential backoff or reduce request rate.
+
+## Troubleshooting
+
+### Check Authentication
+- Verify API key is correct
+- Ensure using Bearer token format
+- Check X-Project-Id is included
+
+### Validate Request
+- Check request body format
+- Ensure all required fields present
+- Verify field types match expectations
+
+### Review Response
+- Read error message carefully
+- Check HTTP status code
+- Look for validation errors
+
+### Common Issues
+
+1. **401 Errors**: Usually authentication issues
+2. **400 Errors**: Usually validation/format issues
+3. **404 Errors**: Resource doesn't exist or wrong ID
+4. **500 Errors**: Contact support
+
+## Getting Help
+
+If you continue experiencing issues:
+
+1. Review this documentation
+2. Check the [API Reference](/api-reference/overview)
+3. Join our community
+4. Open an issue on GitHub

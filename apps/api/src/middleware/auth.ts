@@ -127,45 +127,38 @@ export const requireProjectAccess = async (req: Request, res: Response, next: Ne
 };
 
 /**
- * Middleware to require API key authentication (for public API endpoints)
- * Validates that the request has a valid API key (public or secret) and sets the project
+ * Middleware to require public API key authentication (for /v1/track endpoint only)
+ * Validates that the request has a valid public key and sets the project
  * @param req
  * @param res
  * @param next
  */
-export const requireApiKey = async (req: Request, res: Response, next: NextFunction) => {
+export const requirePublicKey = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Get API key from Authorization header or X-API-Key header
+    // Get API key from Authorization header
     const authHeader = req.headers.authorization;
-    const apiKeyHeader = req.headers['x-api-key'] as string | undefined;
 
-    let apiKey: string | undefined;
-
-    if (authHeader) {
-      // Support "Bearer <key>" format
-      const parts = authHeader.split(' ');
-      if (parts.length === 2 && parts[0] === 'Bearer') {
-        apiKey = parts[1];
-      } else {
-        apiKey = authHeader;
-      }
-    } else if (apiKeyHeader) {
-      apiKey = apiKeyHeader;
+    if (!authHeader) {
+      throw new HttpException(401, 'Authorization header is required');
     }
 
-    if (!apiKey) {
-      throw new HttpException(401, 'API key is required');
+    // Support "Bearer <key>" format
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+      throw new HttpException(401, 'Authorization header must use Bearer token format');
     }
 
-    // Look up project by public or secret key
+    const apiKey = parts[1];
+
+    // Look up project by public key only
     const project = await prisma.project.findFirst({
       where: {
-        OR: [{public: apiKey}, {secret: apiKey}],
+        public: apiKey,
       },
     });
 
     if (!project) {
-      throw new HttpException(401, 'Invalid API key');
+      throw new HttpException(401, 'Invalid public API key');
     }
 
     if (project.disabled) {
@@ -176,6 +169,140 @@ export const requireApiKey = async (req: Request, res: Response, next: NextFunct
     res.locals.auth = {
       type: 'apiKey',
       projectId: project.id,
+    } as AuthResponse;
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Middleware to require secret API key authentication
+ * Validates that the request has a valid secret key and sets the project
+ * @param req
+ * @param res
+ * @param next
+ */
+export const requireSecretKey = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Get API key from Authorization header
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      throw new HttpException(401, 'Authorization header is required');
+    }
+
+    // Support "Bearer <key>" format
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+      throw new HttpException(401, 'Authorization header must use Bearer token format');
+    }
+
+    const apiKey = parts[1];
+
+    // Look up project by secret key only
+    const project = await prisma.project.findFirst({
+      where: {
+        secret: apiKey,
+      },
+    });
+
+    if (!project) {
+      throw new HttpException(401, 'Invalid secret API key. This endpoint requires a secret key (sk_*).');
+    }
+
+    if (project.disabled) {
+      throw new HttpException(403, 'Project is disabled');
+    }
+
+    // Set auth response with project ID
+    res.locals.auth = {
+      type: 'apiKey',
+      projectId: project.id,
+    } as AuthResponse;
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Middleware to require authentication - supports both JWT and secret API key
+ * For JWT: requires X-Project-Id header and validates user has access to the project
+ * For API key: only accepts secret keys (sk_*), derives project from the key
+ * @param req
+ * @param res
+ * @param next
+ */
+export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Check for API key first (Authorization header with Bearer token)
+    const authHeader = req.headers.authorization;
+
+    // If Authorization header is provided, use secret key authentication
+    if (authHeader) {
+      // Support "Bearer <key>" format
+      const parts = authHeader.split(' ');
+      if (parts.length !== 2 || parts[0] !== 'Bearer') {
+        throw new HttpException(401, 'Authorization header must use Bearer token format');
+      }
+
+      const apiKey = parts[1];
+      // Look up project by secret key only (public keys not allowed)
+      const project = await prisma.project.findFirst({
+        where: {
+          secret: apiKey,
+        },
+      });
+
+      if (!project) {
+        throw new HttpException(401, 'Invalid secret API key. This endpoint requires a secret key (sk_*).');
+      }
+
+      if (project.disabled) {
+        throw new HttpException(403, 'Project is disabled');
+      }
+
+      // Set auth response with project ID
+      res.locals.auth = {
+        type: 'apiKey',
+        projectId: project.id,
+      } as AuthResponse;
+
+      return next();
+    }
+
+    // Otherwise, use JWT authentication
+    const userId = parseJwt(req);
+
+    // Get project ID from header (required for JWT auth)
+    const projectId = req.headers['x-project-id'] as string | undefined;
+
+    if (!projectId) {
+      throw new HttpException(400, 'Project ID is required');
+    }
+
+    // Verify user has access to this project
+    const membership = await prisma.membership.findUnique({
+      where: {
+        userId_projectId: {
+          userId,
+          projectId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new HttpException(403, 'You do not have access to this project');
+    }
+
+    // Set auth response with project ID
+    res.locals.auth = {
+      type: 'jwt',
+      userId,
+      projectId,
     } as AuthResponse;
 
     next();

@@ -1,0 +1,259 @@
+---
+title: Docker Deployment
+description: Deploy Plunk with Docker Compose
+---
+
+## Prerequisites
+
+- Docker installed
+- Docker Compose installed
+- Git installed
+
+## Quick Start
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/useplunk/plunk.git
+cd plunk
+```
+
+### 2. Copy Environment File
+
+```bash
+cp .env.self-host.example .env
+```
+
+### 3. Configure Environment
+
+Edit `.env` and configure required variables:
+
+```bash
+# Database
+DATABASE_URL="postgresql://postgres:password@db:5432/plunk"
+DIRECT_DATABASE_URL="postgresql://postgres:password@db:5432/plunk"
+
+# Redis
+REDIS_URL="redis://redis:6379"
+
+# JWT Secret (generate with: openssl rand -base64 32)
+JWT_SECRET="your-secret-here"
+
+# AWS SES (for email sending)
+AWS_SES_REGION="us-east-1"
+AWS_SES_ACCESS_KEY_ID="your-access-key"
+AWS_SES_SECRET_ACCESS_KEY="your-secret-key"
+
+# AWS S3 (optional, for asset storage)
+AWS_S3_BUCKET="your-bucket"
+AWS_S3_ACCESS_KEY_ID="your-access-key"
+AWS_S3_ACCESS_KEY_SECRET="your-secret-key"
+
+# Application URLs
+API_URI="http://localhost:3001"
+DASHBOARD_URI="http://localhost:3000"
+LANDING_URI="http://localhost:3002"
+```
+
+### 4. Start Services
+
+```bash
+docker-compose up -d
+```
+
+This starts:
+- PostgreSQL database
+- Redis
+- API server (port 3001)
+- Worker process
+- Web dashboard (port 3000)
+
+### 5. Run Migrations
+
+```bash
+docker-compose exec api yarn workspace @repo/db migrate:prod
+```
+
+### 6. Access Dashboard
+
+Open `http://localhost:3000` in your browser and create your first account.
+
+## Docker Compose Configuration
+
+### docker-compose.yml
+
+```yaml
+version: '3.8'
+
+services:
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: plunk
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/plunk
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+      - redis
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: yarn workspace api dev:worker
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/plunk
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      - NEXT_PUBLIC_API_URI=http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+## Production Deployment
+
+### Security Hardening
+
+1. **Use strong passwords**
+   ```bash
+   POSTGRES_PASSWORD=$(openssl rand -base64 32)
+   JWT_SECRET=$(openssl rand -base64 32)
+   ```
+
+2. **Use HTTPS**
+   - Set up reverse proxy (nginx)
+   - Configure SSL certificates (Let's Encrypt)
+
+3. **Restrict network access**
+   - Don't expose database ports
+   - Use internal Docker networks
+
+4. **Regular backups**
+   - Database backups
+   - Redis snapshots (optional)
+
+### Scaling
+
+#### Scale Workers
+
+```bash
+docker-compose up -d --scale worker=3
+```
+
+Run multiple worker processes for higher email throughput.
+
+#### Separate Services
+
+For production, run services on separate servers:
+
+- Load balancer → Multiple API servers
+- Multiple worker processes
+- Managed PostgreSQL (AWS RDS, DigitalOcean)
+- Managed Redis (AWS ElastiCache, Redis Cloud)
+
+## Maintenance
+
+### View Logs
+
+```bash
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f api
+docker-compose logs -f worker
+```
+
+### Restart Services
+
+```bash
+docker-compose restart api worker
+```
+
+### Update Plunk
+
+```bash
+git pull
+docker-compose build
+docker-compose up -d
+```
+
+### Backup Database
+
+```bash
+docker-compose exec db pg_dump -U postgres plunk > backup.sql
+```
+
+### Restore Database
+
+```bash
+docker-compose exec -T db psql -U postgres plunk < backup.sql
+```
+
+## Troubleshooting
+
+### Services won't start
+
+Check logs:
+```bash
+docker-compose logs
+```
+
+### Database connection errors
+
+Ensure DATABASE_URL is correct and database is running:
+```bash
+docker-compose ps db
+```
+
+### Worker not processing jobs
+
+Check worker logs:
+```bash
+docker-compose logs worker
+```
+
+Verify Redis connection:
+```bash
+docker-compose exec redis redis-cli PING
+```
+
+## Next Steps
+
+- [Configure environment variables](/self-hosting/environment-variables)
+- [Set up email delivery](/self-hosting/email-setup)
+- [Database setup and migrations](/self-hosting/database-setup)

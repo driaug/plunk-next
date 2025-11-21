@@ -1,0 +1,368 @@
+---
+title: Campaigns
+description: Send one-time email broadcasts to your audience
+---
+
+## Overview
+
+Campaigns are one-time email broadcasts sent to your contacts. You can send to all contacts, a specific segment, or contacts matching custom filters. Campaigns can be sent immediately or scheduled for future delivery.
+
+## Campaign Types
+
+### All Contacts
+Send to your entire contact list (subscribed contacts only).
+
+### Segment-Based
+Send to contacts in a specific segment.
+
+### Filtered
+Send to contacts matching custom filter conditions.
+
+## Creating a Campaign
+
+### Via Dashboard
+
+1. Navigate to **Campaigns**
+2. Click **Create Campaign**
+3. Name your campaign
+4. Choose your audience (All, Segment, or Filtered)
+5. Select a template or compose inline
+6. Preview your email
+7. Send immediately or schedule for later
+
+### Via API
+
+```bash
+curl -X POST https://api.useplunk.com/campaigns \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Spring Sale Announcement",
+    "type": "SEGMENT",
+    "segmentId": "segment_id",
+    "templateId": "template_id",
+    "subject": "Spring Sale - 30% Off Everything!",
+    "status": "DRAFT"
+  }'
+```
+
+## Campaign Status
+
+### DRAFT
+Campaign is being created or edited. Can be modified or deleted.
+
+### SCHEDULED
+Campaign is scheduled for future delivery. Can be cancelled.
+
+### SENDING
+Campaign is currently being sent. Cannot be stopped.
+
+### SENT
+Campaign has been sent successfully.
+
+## Scheduling Campaigns
+
+### Send Immediately
+
+Set status to `SENDING`:
+
+```bash
+curl -X POST https://api.useplunk.com/campaigns/campaign_id/send \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scheduledAt": null
+  }'
+```
+
+### Schedule for Later
+
+```bash
+curl -X POST https://api.useplunk.com/campaigns/campaign_id/send \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scheduledAt": "2024-03-15T10:00:00Z"
+  }'
+```
+
+## Audience Targeting
+
+### All Contacts
+
+```json
+{
+  "type": "ALL",
+  "filters": null,
+  "segmentId": null
+}
+```
+
+### Segment-Based
+
+```json
+{
+  "type": "SEGMENT",
+  "segmentId": "segment_abc123",
+  "filters": null
+}
+```
+
+### Custom Filters
+
+```json
+{
+  "type": "FILTERED",
+  "segmentId": null,
+  "filters": {
+    "operator": "AND",
+    "conditions": [
+      {
+        "field": "data.plan",
+        "operator": "equals",
+        "value": "premium"
+      },
+      {
+        "field": "data.lastLoginDate",
+        "operator": "greaterThan",
+        "value": "2024-01-01"
+      }
+    ]
+  }
+}
+```
+
+## Managing Campaigns
+
+### List Campaigns
+
+```bash
+curl -X GET "https://api.useplunk.com/campaigns?limit=20" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Filter by Status
+
+```bash
+curl -X GET "https://api.useplunk.com/campaigns?status=SENT&limit=20" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Get Campaign
+
+```bash
+curl -X GET https://api.useplunk.com/campaigns/campaign_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Update Campaign (Draft Only)
+
+```bash
+curl -X PUT https://api.useplunk.com/campaigns/campaign_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Campaign Name",
+    "subject": "New subject line"
+  }'
+```
+
+### Cancel Scheduled Campaign
+
+```bash
+curl -X POST https://api.useplunk.com/campaigns/campaign_id/cancel \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Delete Campaign
+
+```bash
+curl -X DELETE https://api.useplunk.com/campaigns/campaign_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+## Campaign Statistics
+
+Get detailed performance metrics:
+
+```bash
+curl -X GET https://api.useplunk.com/campaigns/campaign_id/stats \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "sent": 10000,
+    "delivered": 9850,
+    "opened": 3500,
+    "clicked": 850,
+    "bounced": 100,
+    "complained": 50,
+    "unsubscribed": 25,
+    "openRate": 35.53,
+    "clickRate": 8.63,
+    "bounceRate": 1.01
+  }
+}
+```
+
+## Background Processing
+
+Campaigns are sent asynchronously in batches:
+
+1. Campaign is created with `DRAFT` status
+2. When sent, status changes to `SENDING`
+3. Contacts are queried based on audience type
+4. Emails are queued in batches (1000 at a time)
+5. Worker processes emails at 14/second (AWS SES limit)
+6. Status changes to `SENT` when complete
+
+## Best Practices
+
+### 1. Test Before Sending
+
+Always send a test email before sending to your entire list:
+
+- Use the preview function in the dashboard
+- Send to a test email address
+- Check on multiple email clients (Gmail, Outlook, Apple Mail)
+- Verify all variables are replaced correctly
+
+### 2. Segment Your Audience
+
+Don't send every campaign to everyone:
+
+- Create targeted segments
+- Personalize messaging based on segment
+- Higher engagement = better deliverability
+
+### 3. Timing Matters
+
+Consider when your audience is most likely to engage:
+
+- B2B: Tuesday-Thursday, 10am-2pm
+- B2C: Evenings and weekends
+- Test different times and analyze results
+
+### 4. Monitor Deliverability
+
+Watch your metrics:
+
+- Open rate < 10%: Subject line or sender reputation issues
+- Click rate < 1%: Content or CTA issues
+- Bounce rate > 5%: List hygiene problems
+- Complaint rate > 0.1%: Content or permission issues
+
+### 5. A/B Testing
+
+Test different elements:
+
+- Subject lines
+- Send times
+- Content variations
+- CTAs
+
+Create multiple campaigns and compare results.
+
+### 6. Clean Your List
+
+Regularly remove:
+
+- Hard bounces (immediately)
+- Soft bounces (after 3-5 attempts)
+- Unengaged contacts (no opens in 6 months)
+- Unsubscribes (automatically handled)
+
+### 7. Respect Unsubscribes
+
+- Include unsubscribe link (automatic in marketing templates)
+- Process unsubscribes immediately
+- Never send marketing emails to unsubscribed contacts
+- Respect preference center choices
+
+## Example Campaign Workflow
+
+```javascript
+// 1. Create campaign
+const createResponse = await fetch('https://api.useplunk.com/campaigns', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${apiKey}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'Weekly Newsletter - March 15',
+    type: 'SEGMENT',
+    segmentId: 'active-users-segment',
+    templateId: 'newsletter-template',
+    subject: 'This Week in Product Updates',
+    status: 'DRAFT'
+  })
+});
+
+const campaign = await createResponse.json();
+
+// 2. Schedule for tomorrow at 10am
+await fetch(`https://api.useplunk.com/campaigns/${campaign.data.id}/send`, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${apiKey}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+  })
+});
+
+// 3. Check status later
+const statusResponse = await fetch(
+  `https://api.useplunk.com/campaigns/${campaign.data.id}`,
+  {
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+    }
+  }
+);
+
+// 4. Get stats after sending
+const statsResponse = await fetch(
+  `https://api.useplunk.com/campaigns/${campaign.data.id}/stats`,
+  {
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+    }
+  }
+);
+```
+
+## Troubleshooting
+
+### Campaign stuck in SENDING
+
+- Check worker process is running
+- Check Redis queue is healthy
+- Review worker logs for errors
+
+### Low delivery rate
+
+- Verify AWS SES is properly configured
+- Check for domain verification
+- Review bounce/complaint rates
+
+### Low engagement
+
+- Improve subject lines
+- Segment your audience better
+- A/B test different content
+- Check send timing
+
+## Next Steps
+
+- [Build automated workflows](/guides/workflows)
+- [Create dynamic segments](/guides/segments)
+- [Track campaign analytics](/guides/analytics)
+- [Set up custom domains](/guides/custom-domains)

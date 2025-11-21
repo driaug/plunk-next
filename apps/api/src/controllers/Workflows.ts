@@ -2,7 +2,7 @@ import {Controller, Delete, Get, Middleware, Patch, Post} from '@overnightjs/cor
 import type {Request, Response} from 'express';
 
 import type {AuthResponse} from '../middleware/auth.js';
-import {requireProjectAccess} from '../middleware/auth.js';
+import {requireAuth} from '../middleware/auth.js';
 import {WorkflowService} from '../services/WorkflowService.js';
 
 @Controller('workflows')
@@ -12,7 +12,7 @@ export class Workflows {
    * List all workflows for the authenticated project
    */
   @Get('')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async list(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const page = parseInt(req.query.page as string) || 1;
@@ -29,7 +29,7 @@ export class Workflows {
    * Get a specific workflow with all steps and transitions
    */
   @Get(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async get(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const workflowId = req.params.id;
@@ -48,7 +48,7 @@ export class Workflows {
    * Create a new workflow
    */
   @Post('')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async create(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {name, description, eventName, enabled, allowReentry} = req.body;
@@ -77,7 +77,7 @@ export class Workflows {
    * Update a workflow
    */
   @Patch(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async update(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const workflowId = req.params.id;
@@ -104,7 +104,7 @@ export class Workflows {
    * Delete a workflow
    */
   @Delete(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async delete(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const workflowId = req.params.id;
@@ -123,7 +123,7 @@ export class Workflows {
    * Add a step to a workflow
    */
   @Post(':id/steps')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async addStep(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const workflowId = req.params.id;
@@ -154,7 +154,7 @@ export class Workflows {
    * Update a workflow step
    */
   @Patch(':id/steps/:stepId')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async updateStep(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const workflowId = req.params.id;
@@ -180,7 +180,7 @@ export class Workflows {
    * Delete a workflow step
    */
   @Delete(':id/steps/:stepId')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async deleteStep(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const workflowId = req.params.id;
@@ -200,7 +200,7 @@ export class Workflows {
    * Create a transition between steps
    */
   @Post(':id/transitions')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async createTransition(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const workflowId = req.params.id;
@@ -229,7 +229,7 @@ export class Workflows {
    * Delete a transition
    */
   @Delete(':id/transitions/:transitionId')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async deleteTransition(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const workflowId = req.params.id;
@@ -249,7 +249,7 @@ export class Workflows {
    * Start a workflow execution for a contact
    */
   @Post(':id/executions')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async startExecution(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const workflowId = req.params.id;
@@ -273,7 +273,7 @@ export class Workflows {
    * List executions for a workflow
    */
   @Get(':id/executions')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async listExecutions(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const workflowId = req.params.id;
@@ -295,7 +295,7 @@ export class Workflows {
    * Get a specific execution with details
    */
   @Get(':id/executions/:executionId')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async getExecution(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const workflowId = req.params.id;
@@ -315,7 +315,7 @@ export class Workflows {
    * Cancel a workflow execution
    */
   @Delete(':id/executions/:executionId')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async cancelExecution(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const workflowId = req.params.id;

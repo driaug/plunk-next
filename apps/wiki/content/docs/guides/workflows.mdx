@@ -1,0 +1,367 @@
+---
+title: Workflows
+description: Build automated email sequences with visual workflow builder
+---
+
+## Overview
+
+Workflows are automated email sequences that trigger based on events, schedules, or manual execution. Build sophisticated marketing automation with visual workflow builder, conditional branching, and event-driven triggers.
+
+## Workflow Components
+
+### Triggers
+
+Start a workflow execution:
+
+- **EVENT**: Triggered by custom events
+- **SEGMENT_ENTRY**: When contact enters a segment
+- **SEGMENT_EXIT**: When contact exits a segment
+- **SCHEDULE**: Run on a schedule (cron)
+- **MANUAL**: Manually triggered via API
+
+### Steps
+
+Actions within a workflow:
+
+- **SEND_EMAIL**: Send an email to the contact
+- **DELAY**: Wait for a specified duration
+- **WAIT_FOR_EVENT**: Wait for a specific event (with timeout)
+- **CONDITION**: Branch based on contact data
+- **UPDATE_CONTACT**: Modify contact fields
+- **WEBHOOK**: Call an external API
+- **EXIT**: End the workflow execution
+
+### Transitions
+
+Connections between steps that define the flow.
+
+## Creating a Workflow
+
+### Via Dashboard
+
+1. Navigate to **Workflows**
+2. Click **Create Workflow**
+3. Name your workflow
+4. Choose trigger type
+5. Add steps using the visual builder
+6. Connect steps with transitions
+7. Save and activate the workflow
+
+### Via API
+
+```bash
+curl -X POST https://api.useplunk.com/workflows \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Welcome Series",
+    "description": "3-email onboarding sequence",
+    "triggerType": "EVENT",
+    "triggerConfig": {
+      "eventName": "user.signed_up"
+    },
+    "allowReentry": false,
+    "active": true
+  }'
+```
+
+## Workflow Steps
+
+### Send Email Step
+
+```json
+{
+  "type": "SEND_EMAIL",
+  "name": "Welcome Email",
+  "config": {
+    "templateId": "welcome-template",
+    "subject": "Welcome {{firstName}}!"
+  }
+}
+```
+
+### Delay Step
+
+```json
+{
+  "type": "DELAY",
+  "name": "Wait 2 Days",
+  "config": {
+    "duration": 172800,
+    "unit": "seconds"
+  }
+}
+```
+
+### Wait for Event Step
+
+```json
+{
+  "type": "WAIT_FOR_EVENT",
+  "name": "Wait for Purchase",
+  "config": {
+    "eventName": "purchase",
+    "timeout": 604800
+  }
+}
+```
+
+If event occurs: Follow "success" transition
+If timeout: Follow "timeout" transition
+
+### Condition Step
+
+```json
+{
+  "type": "CONDITION",
+  "name": "Check Plan Type",
+  "config": {
+    "field": "data.plan",
+    "operator": "equals",
+    "value": "premium"
+  }
+}
+```
+
+If true: Follow "true" transition
+If false: Follow "false" transition
+
+### Update Contact Step
+
+```json
+{
+  "type": "UPDATE_CONTACT",
+  "name": "Mark Onboarded",
+  "config": {
+    "data": {
+      "onboardingCompleted": true,
+      "onboardedAt": "{{now}}"
+    }
+  }
+}
+```
+
+### Webhook Step
+
+```json
+{
+  "type": "WEBHOOK",
+  "name": "Notify CRM",
+  "config": {
+    "url": "https://api.example.com/webhook",
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer token"
+    },
+    "body": {
+      "email": "{{email}}",
+      "event": "workflow_completed"
+    }
+  }
+}
+```
+
+## Example Workflows
+
+### Welcome Series
+
+```
+TRIGGER (user.signed_up)
+  ↓
+SEND_EMAIL (Welcome)
+  ↓
+DELAY (1 day)
+  ↓
+SEND_EMAIL (Getting Started Guide)
+  ↓
+DELAY (2 days)
+  ↓
+SEND_EMAIL (Pro Tips)
+  ↓
+EXIT
+```
+
+### Re-engagement Campaign
+
+```
+TRIGGER (SCHEDULE: daily)
+  ↓
+CONDITION (lastLoginDate < 30 days ago)
+  ├─ TRUE → SEND_EMAIL (We miss you)
+  │           ↓
+  │         WAIT_FOR_EVENT (login, 7 days)
+  │         ├─ SUCCESS → EXIT
+  │         └─ TIMEOUT → SEND_EMAIL (Special Offer)
+  │                        ↓
+  │                      EXIT
+  └─ FALSE → EXIT
+```
+
+### Trial Expiration
+
+```
+TRIGGER (trial.created)
+  ↓
+DELAY (5 days)
+  ↓
+SEND_EMAIL (Trial ending soon)
+  ↓
+DELAY (2 days)
+  ↓
+CONDITION (plan = trial)
+  ├─ TRUE → SEND_EMAIL (Last day of trial)
+  │           ↓
+  │         DELAY (1 day)
+  │           ↓
+  │         CONDITION (plan = trial)
+  │         ├─ TRUE → SEND_EMAIL (Trial expired)
+  │         └─ FALSE → EXIT
+  └─ FALSE → EXIT
+```
+
+## Managing Workflows
+
+### List Workflows
+
+```bash
+curl -X GET "https://api.useplunk.com/workflows?limit=20" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Get Workflow
+
+```bash
+curl -X GET https://api.useplunk.com/workflows/workflow_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Update Workflow
+
+```bash
+curl -X PATCH https://api.useplunk.com/workflows/workflow_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Welcome Series",
+    "active": true
+  }'
+```
+
+### Delete Workflow
+
+```bash
+curl -X DELETE https://api.useplunk.com/workflows/workflow_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+## Workflow Executions
+
+### Start Execution
+
+```bash
+curl -X POST https://api.useplunk.com/workflows/workflow_id/executions \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contactId": "contact_id",
+    "data": {
+      "customField": "value"
+    }
+  }'
+```
+
+### List Executions
+
+```bash
+curl -X GET "https://api.useplunk.com/workflows/workflow_id/executions?limit=20" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Get Execution
+
+```bash
+curl -X GET https://api.useplunk.com/workflows/workflow_id/executions/execution_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+Response includes all step executions:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "execution_id",
+    "status": "active",
+    "steps": [
+      {
+        "stepId": "step_1",
+        "status": "completed",
+        "completedAt": "2024-03-15T10:00:00Z"
+      },
+      {
+        "stepId": "step_2",
+        "status": "waiting",
+        "waitingUntil": "2024-03-16T10:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+### Cancel Execution
+
+```bash
+curl -X DELETE https://api.useplunk.com/workflows/workflow_id/executions/execution_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+## Re-entry Control
+
+Control whether contacts can re-enter a workflow they've already completed:
+
+- **allowReentry: true**: Contact can start the workflow multiple times
+- **allowReentry: false**: Contact can only enter once (default)
+
+Use cases for re-entry:
+
+- Recurring campaigns (weekly newsletters)
+- Event-based sequences that can happen multiple times
+- Behavior-triggered automations
+
+Prevent re-entry for:
+
+- One-time onboarding sequences
+- Trial expiration workflows
+- Churn prevention campaigns
+
+## Best Practices
+
+### 1. Start Simple
+
+Begin with linear workflows before adding complex branching.
+
+### 2. Test Thoroughly
+
+Test workflows with a small audience or test contacts before going live.
+
+### 3. Monitor Performance
+
+Track execution rates and email engagement at each step.
+
+### 4. Handle Edge Cases
+
+Use conditions and WAIT_FOR_EVENT timeouts to handle unexpected scenarios.
+
+### 5. Respect User Actions
+
+Exit workflows when users complete desired actions (e.g., purchase, upgrade).
+
+### 6. Optimize Timing
+
+Test different delay durations to find optimal engagement windows.
+
+## Next Steps
+
+- [Track custom events](/guides/events) to trigger workflows
+- [Create segments](/guides/segments) for segment-triggered workflows
+- [Set up webhooks](/guides/webhooks) for external integrations

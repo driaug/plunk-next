@@ -2,7 +2,7 @@ import {Controller, Get, Middleware} from '@overnightjs/core';
 import type {Request, Response} from 'express';
 
 import type {AuthResponse} from '../middleware/auth.js';
-import {requireProjectAccess} from '../middleware/auth.js';
+import {requireAuth} from '../middleware/auth.js';
 import {ActivityService, ActivityType} from '../services/ActivityService.js';
 
 @Controller('activity')
@@ -20,7 +20,7 @@ export class Activity {
    * - endDate: ISO date string
    */
   @Get('')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async getActivities(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
@@ -60,7 +60,7 @@ export class Activity {
    * - endDate: ISO date string (defaults to now)
    */
   @Get('stats')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async getStats(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
@@ -79,7 +79,7 @@ export class Activity {
    * - minutes: number (default 5)
    */
   @Get('recent-count')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async getRecentCount(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const minutes = Math.min(parseInt(req.query.minutes as string) || 5, 60); // Max 60 minutes
@@ -94,7 +94,7 @@ export class Activity {
    * Get available activity types (for UI filters)
    */
   @Get('types')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async getTypes(_req: Request, res: Response) {
     const types = Object.values(ActivityType);
     return res.status(200).json({types});

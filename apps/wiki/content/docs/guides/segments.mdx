@@ -1,0 +1,305 @@
+---
+title: Segments
+description: Create dynamic audience segments based on filters
+---
+
+## Overview
+
+Segments are dynamic groups of contacts based on filter conditions. Segments automatically update as contact data changes, allowing you to target specific audiences for campaigns and workflows.
+
+## Creating Segments
+
+### Via Dashboard
+
+1. Navigate to **Segments**
+2. Click **Create Segment**
+3. Name your segment
+4. Add filter conditions
+5. Choose whether to track membership (entry/exit events)
+6. Save the segment
+
+### Via API
+
+```bash
+curl -X POST https://api.useplunk.com/segments \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Premium Users",
+    "filters": {
+      "operator": "AND",
+      "conditions": [
+        {
+          "field": "data.plan",
+          "operator": "equals",
+          "value": "premium"
+        },
+        {
+          "field": "subscribed",
+          "operator": "equals",
+          "value": true
+        }
+      ]
+    },
+    "trackMembership": true
+  }'
+```
+
+## Filter Conditions
+
+### Operators
+
+- **equals**: Exact match
+- **notEquals**: Does not match
+- **contains**: String contains value
+- **notContains**: String does not contain value
+- **greaterThan**: Numeric/date greater than
+- **lessThan**: Numeric/date less than
+- **greaterThanOrEquals**: Numeric/date greater than or equal to
+- **lessThanOrEquals**: Numeric/date less than or equal to
+- **in**: Value in array
+- **notIn**: Value not in array
+- **exists**: Field exists
+- **notExists**: Field does not exist
+
+### Field Paths
+
+Access contact fields using dot notation:
+
+- `email`: Contact email
+- `subscribed`: Subscription status
+- `data.firstName`: Custom field
+- `data.preferences.newsletter`: Nested field
+
+### Examples
+
+#### Active Premium Users
+
+```json
+{
+  "operator": "AND",
+  "conditions": [
+    { "field": "data.plan", "operator": "equals", "value": "premium" },
+    { "field": "data.lastLoginDate", "operator": "greaterThan", "value": "2024-01-01" }
+  ]
+}
+```
+
+#### Churned Users
+
+```json
+{
+  "operator": "AND",
+  "conditions": [
+    { "field": "data.plan", "operator": "equals", "value": "free" },
+    { "field": "data.downgradedAt", "operator": "exists", "value": true },
+    { "field": "data.downgradedAt", "operator": "greaterThan", "value": "2024-01-01" }
+  ]
+}
+```
+
+#### High-Value Customers
+
+```json
+{
+  "operator": "AND",
+  "conditions": [
+    { "field": "data.totalSpent", "operator": "greaterThanOrEquals", "value": 1000 },
+    { "field": "subscribed", "operator": "equals", "value": true }
+  ]
+}
+```
+
+## Membership Tracking
+
+When `trackMembership` is enabled:
+
+- Segment membership is computed and stored
+- Entry/exit events are tracked
+- Can trigger workflows on segment entry/exit
+- Provides historical membership data
+
+When disabled:
+
+- Membership is computed dynamically on query
+- No entry/exit events
+- Lower storage overhead
+- Faster for frequently changing segments
+
+## Managing Segments
+
+### List Segments
+
+```bash
+curl -X GET https://api.useplunk.com/segments \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Get Segment with Count
+
+```bash
+curl -X GET https://api.useplunk.com/segments/segment_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+Response includes cached member count (updated every 15 minutes):
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "segment_id",
+    "name": "Premium Users",
+    "memberCount": 1542,
+    "lastCountedAt": "2024-03-15T10:30:00Z"
+  }
+}
+```
+
+### List Segment Members
+
+```bash
+curl -X GET "https://api.useplunk.com/segments/segment_id/contacts?limit=50" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Update Segment
+
+```bash
+curl -X PATCH https://api.useplunk.com/segments/segment_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Premium Active Users",
+    "filters": {
+      "operator": "AND",
+      "conditions": [
+        { "field": "data.plan", "operator": "equals", "value": "premium" },
+        { "field": "data.lastLoginDate", "operator": "greaterThan", "value": "2024-02-01" }
+      ]
+    }
+  }'
+```
+
+### Recompute Membership
+
+Force recomputation of segment membership:
+
+```bash
+curl -X POST https://api.useplunk.com/segments/segment_id/compute \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Refresh Member Count
+
+Update the cached member count:
+
+```bash
+curl -X POST https://api.useplunk.com/segments/segment_id/refresh \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Delete Segment
+
+```bash
+curl -X DELETE https://api.useplunk.com/segments/segment_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+## Using Segments
+
+### In Campaigns
+
+Create a campaign targeting a segment:
+
+```json
+{
+  "type": "SEGMENT",
+  "segmentId": "premium-users-segment"
+}
+```
+
+### In Workflows
+
+Trigger workflows when contacts enter a segment:
+
+```json
+{
+  "triggerType": "SEGMENT_ENTRY",
+  "segmentId": "new-users-segment"
+}
+```
+
+### In Analytics
+
+Analyze segment performance and behavior over time.
+
+## Segment Ideas
+
+### Engagement-Based
+
+- Active users (logged in last 7 days)
+- Inactive users (no activity in 30 days)
+- Power users (high usage metrics)
+- At-risk users (declining engagement)
+
+### Lifecycle-Based
+
+- New signups (joined last 30 days)
+- Trial users (on trial plan)
+- Converted users (upgraded to paid)
+- Churned users (downgraded or cancelled)
+
+### Behavior-Based
+
+- Completed onboarding
+- Never logged in
+- Used feature X
+- Abandoned cart
+
+### Demographics
+
+- Location-based (data.country)
+- Company size (data.employees)
+- Industry (data.industry)
+- Job role (data.role)
+
+### Value-Based
+
+- High-value (totalSpent > $1000)
+- VIP customers (plan = enterprise)
+- Payment failed (paymentStatus = failed)
+- Expiring trials (trialEndsAt < 7 days)
+
+## Performance Considerations
+
+### Cached Counts
+
+Segment counts are cached and updated every 15 minutes. For real-time counts, use `/compute` or `/refresh` endpoints.
+
+### Complex Filters
+
+- Keep conditions simple when possible
+- Use indexed fields (email, subscribed)
+- Avoid deep nested field access
+- Test performance with your data volume
+
+### Membership Tracking
+
+Only enable for segments that need it:
+
+- Workflow triggers (SEGMENT_ENTRY/EXIT)
+- Historical analysis
+- Cohort tracking
+
+Disable for:
+
+- Simple targeting
+- Frequently changing criteria
+- Very large segments (100k+ members)
+
+## Next Steps
+
+- [Create targeted campaigns](/guides/campaigns)
+- [Build segment-triggered workflows](/guides/workflows)
+- [Track segment analytics](/guides/analytics)

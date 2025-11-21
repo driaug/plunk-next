@@ -3,7 +3,7 @@ import type {Request, Response} from 'express';
 import multer from 'multer';
 
 import type {AuthResponse} from '../middleware/auth.js';
-import {requireProjectAccess} from '../middleware/auth.js';
+import {requireAuth} from '../middleware/auth.js';
 import {ContactService} from '../services/ContactService.js';
 import {QueueService} from '../services/QueueService.js';
 
@@ -30,7 +30,7 @@ export class Contacts {
    * List all contacts for the authenticated project with cursor-based pagination
    */
   @Get('')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async list(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
@@ -47,7 +47,7 @@ export class Contacts {
    * Get all available contact fields (both standard and custom fields from data JSON)
    */
   @Get('fields')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async getAvailableFields(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
 
@@ -72,7 +72,7 @@ export class Contacts {
    * Example: /contacts/fields/data.plan/values or /contacts/fields/subscribed/values
    */
   @Get('fields/:field/values')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async getFieldValues(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const field = req.params.field;
@@ -104,7 +104,7 @@ export class Contacts {
    * Get a specific contact by ID
    */
   @Get(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async get(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const contactId = req.params.id;
@@ -123,7 +123,7 @@ export class Contacts {
    * Create or update a contact (upsert)
    */
   @Post('')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async create(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {email, data, subscribed} = req.body;
@@ -152,7 +152,7 @@ export class Contacts {
    * Update a contact
    */
   @Patch(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async update(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const contactId = req.params.id;
@@ -172,7 +172,7 @@ export class Contacts {
    * Delete a contact
    */
   @Delete(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async delete(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const contactId = req.params.id;
@@ -255,7 +255,7 @@ export class Contacts {
    * Import contacts from CSV file
    */
   @Post('import')
-  @Middleware([requireProjectAccess, upload.single('file')])
+  @Middleware([requireAuth, upload.single('file')])
   public async importCsv(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
 
@@ -288,7 +288,7 @@ export class Contacts {
    * Get import job status
    */
   @Get('import/:jobId')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async getImportStatus(req: Request, res: Response) {
     const jobId = req.params.jobId;
 

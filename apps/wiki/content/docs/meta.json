@@ -1,11 +1,13 @@
 {
   "pages": [
     "index",
-    "---Voor praktijken---",
-    "about-swyp",
-    "usage",
-    "contactsuppliers",
-    "---Voor leveranciers---",
-    "price-display-legal"
+    "---Getting Started---",
+    "getting-started",
+    "---Guides---",
+    "guides",
+    "---API Reference---",
+    "api-reference",
+    "---Self-Hosting---",
+    "self-hosting"
   ]
 }

@@ -1,0 +1,142 @@
+---
+title: Self-Hosting Introduction
+description: Deploy Plunk on your own infrastructure
+---
+
+## Overview
+
+Plunk is fully open-source and can be self-hosted on your own infrastructure. This gives you complete control over your data, email delivery, and infrastructure costs.
+
+## Requirements
+
+### System Requirements
+
+- **Node.js**: Version 20 or higher
+- **PostgreSQL**: Version 14 or higher
+- **Redis**: Version 6 or higher
+- **Docker** (recommended): For easy deployment
+
+### AWS Services (Required)
+
+- **AWS SES**: For email sending
+- **AWS S3**: For asset storage (optional but recommended)
+
+### Minimum Server Specs
+
+- **CPU**: 2 cores
+- **RAM**: 4GB
+- **Storage**: 20GB (grows with contact data)
+
+For scale (1M+ contacts):
+- **CPU**: 4+ cores
+- **RAM**: 8GB+
+- **Storage**: 100GB+
+
+## Architecture Components
+
+### 1. API Server
+Express.js application handling HTTP requests.
+
+**Resources**: 1-2GB RAM, 1-2 CPU cores
+
+### 2. Worker Process
+BullMQ worker processing background jobs.
+
+**Resources**: 1-2GB RAM, 1-2 CPU cores
+
+**Important**: Run workers separately from API server for scalability.
+
+### 3. Web Dashboard
+Next.js application for the UI.
+
+**Resources**: 512MB-1GB RAM
+
+### 4. PostgreSQL Database
+Stores all data (contacts, campaigns, workflows, etc.).
+
+**Resources**: 2-4GB RAM, fast storage (SSD recommended)
+
+### 5. Redis
+Queue system for background jobs.
+
+**Resources**: 512MB-1GB RAM
+
+## Deployment Options
+
+### Docker Compose (Recommended)
+
+Easiest way to get started. Includes all services pre-configured.
+
+[View Docker Guide](/self-hosting/docker)
+
+### Kubernetes
+
+For production deployments at scale.
+
+### Manual Deployment
+
+Deploy each component separately on your infrastructure.
+
+## Quick Start
+
+1. Clone the repository
+2. Copy `.env.self-host.example` to `.env`
+3. Configure environment variables
+4. Run `docker-compose up -d`
+5. Access dashboard at `http://localhost:3000`
+
+## What's Included
+
+- ✅ Full API server
+- ✅ Worker process
+- ✅ Web dashboard
+- ✅ PostgreSQL database
+- ✅ Redis queue
+- ✅ All features (campaigns, workflows, segments)
+- ✅ No feature limitations
+- ✅ No phone-home telemetry
+
+## What's Not Included
+
+- ❌ Managed infrastructure
+- ❌ Automatic updates
+- ❌ Support (community only)
+- ❌ SLA guarantees
+
+## Cost Considerations
+
+### AWS SES Costs
+
+- First 62,000 emails/month: **FREE** (when sent from EC2)
+- Additional emails: **$0.10 per 1,000 emails**
+
+### Infrastructure Costs
+
+Example for moderate usage:
+
+- **Server**: $20-40/month (2-4GB RAM VPS)
+- **Database**: $10-20/month (managed PostgreSQL) or included in VPS
+- **Redis**: $5-10/month (managed Redis) or included in VPS
+- **AWS SES**: $10-50/month (depends on volume)
+- **AWS S3**: $1-5/month (asset storage)
+
+**Total**: ~$50-100/month for self-hosting vs $99+/month for hosted version.
+
+## Support
+
+### Community Support
+
+- GitHub Issues
+- Community Forum
+- Documentation
+
+### Professional Support
+
+Not available for self-hosted deployments. Consider hosted version for enterprise support.
+
+## Next Steps
+
+- [Deploy with Docker](/self-hosting/docker)
+- [Configure environment variables](/self-hosting/environment-variables)
+- [Set up database](/self-hosting/database-setup)
+- [Configure email delivery](/self-hosting/email-setup)

@@ -1,0 +1,1127 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Plunk API",
+    "description": "Open-source email platform API for transactional emails, campaigns, and marketing automation",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Plunk Support",
+      "url": "https://useplunk.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.useplunk.com",
+      "description": "Production server"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "API Key",
+        "description": "API Key authentication. **Secret keys (sk_*)** are required for all endpoints except `/v1/track`. **Public keys (pk_*)** only work with the `/v1/track` endpoint for client-side event tracking. The project is automatically derived from the key."
+      }
+    },
+    "schemas": {
+      "Contact": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique contact identifier"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Contact email address"
+          },
+          "subscribed": {
+            "type": "boolean",
+            "description": "Subscription status"
+          },
+          "data": {
+            "type": "object",
+            "description": "Custom contact data fields",
+            "additionalProperties": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Template": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["TRANSACTIONAL", "MARKETING"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Campaign": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["ALL", "SEGMENT", "FILTERED"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["DRAFT", "SCHEDULED", "SENDING", "SENT"]
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "Segment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "filters": {
+            "type": "object"
+          },
+          "trackMembership": {
+            "type": "boolean"
+          },
+          "memberCount": {
+            "type": "integer"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "time": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "parameters": {
+      "ProjectId": {
+        "name": "X-Project-Id",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Project identifier (automatically derived from your API key, not required for API requests)"
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        },
+        "description": "Maximum items per page"
+      },
+      "Cursor": {
+        "name": "cursor",
+        "in": "query",
+        "schema": {
+          "type": "string"
+        },
+        "description": "Pagination cursor"
+      }
+    }
+  },
+  "paths": {
+    "/v1/send": {
+      "post": {
+        "tags": ["Public API"],
+        "summary": "Send transactional email",
+        "description": "Send a transactional email via the public API. Automatically creates/updates contacts.",
+        "operationId": "sendEmail",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["to", "subscribed"],
+                "properties": {
+                  "to": {
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "format": "email"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "format": "email"
+                        }
+                      }
+                    ],
+                    "description": "Recipient email(s)"
+                  },
+                  "subject": {
+                    "type": "string",
+                    "description": "Email subject (required if no template)"
+                  },
+                  "body": {
+                    "type": "string",
+                    "description": "Email body HTML (required if no template)"
+                  },
+                  "template": {
+                    "type": "string",
+                    "description": "Template identifier to use"
+                  },
+                  "from": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Custom from address (requires verified domain)"
+                  },
+                  "subscribed": {
+                    "type": "boolean",
+                    "description": "Whether recipient is subscribed"
+                  },
+                  "data": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Template variables"
+                  },
+                  "headers": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Custom email headers"
+                  },
+                  "reply": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Reply-to address"
+                  }
+                }
+              },
+              "examples": {
+                "simple": {
+                  "summary": "Simple email",
+                  "value": {
+                    "to": "user@example.com",
+                    "subject": "Welcome!",
+                    "body": "<h1>Hello {{name}}</h1>",
+                    "subscribed": true,
+                    "data": {
+                      "name": "John Doe"
+                    }
+                  }
+                },
+                "withTemplate": {
+                  "summary": "Using template",
+                  "value": {
+                    "to": "user@example.com",
+                    "template": "welcome-email",
+                    "subscribed": true,
+                    "data": {
+                      "firstName": "John",
+                      "lastName": "Doe"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email queued successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "emails": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "to": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/track": {
+      "post": {
+        "tags": ["Public API"],
+        "summary": "Track custom event",
+        "description": "Track a custom event for a contact. Automatically creates/updates the contact.",
+        "operationId": "trackEvent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "event"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Contact email"
+                  },
+                  "event": {
+                    "type": "string",
+                    "description": "Event name"
+                  },
+                  "data": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Event data"
+                  }
+                }
+              },
+              "example": {
+                "email": "user@example.com",
+                "event": "purchase",
+                "data": {
+                  "product": "Premium Plan",
+                  "amount": 99.00
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event tracked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "contact": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "event": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "event": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contacts": {
+      "get": {
+        "tags": ["Contacts"],
+        "summary": "List contacts",
+        "description": "Get a paginated list of contacts with cursor-based pagination",
+        "operationId": "listContacts",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "name": "subscribed",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter by subscription status"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search by email"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of contacts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Contact"
+                          }
+                        },
+                        "nextCursor": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "hasMore": {
+                          "type": "boolean"
+                        },
+                        "total": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Contacts"],
+        "summary": "Create or update contact",
+        "description": "Create a new contact or update existing (upsert by email)",
+        "operationId": "createContact",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "subscribed": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "data": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              },
+              "example": {
+                "email": "user@example.com",
+                "subscribed": true,
+                "data": {
+                  "firstName": "John",
+                  "lastName": "Doe",
+                  "plan": "premium"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contact created/updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Contact"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contacts/{id}": {
+      "get": {
+        "tags": ["Contacts"],
+        "summary": "Get contact",
+        "description": "Get a single contact by ID",
+        "operationId": "getContact",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contact details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Contact"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contact not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Contacts"],
+        "summary": "Update contact",
+        "description": "Update an existing contact",
+        "operationId": "updateContact",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "subscribed": {
+                    "type": "boolean"
+                  },
+                  "data": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contact updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Contact"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Contacts"],
+        "summary": "Delete contact",
+        "description": "Permanently delete a contact",
+        "operationId": "deleteContact",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contact deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/templates": {
+      "get": {
+        "tags": ["Templates"],
+        "summary": "List templates",
+        "description": "Get a paginated list of email templates",
+        "operationId": "listTemplates",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["TRANSACTIONAL", "MARKETING"]
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of templates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Template"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Templates"],
+        "summary": "Create template",
+        "description": "Create a new email template",
+        "operationId": "createTemplate",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "subject", "body", "type"],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["TRANSACTIONAL", "MARKETING"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Template created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Template"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns": {
+      "get": {
+        "tags": ["Campaigns"],
+        "summary": "List campaigns",
+        "description": "Get a paginated list of email campaigns",
+        "operationId": "listCampaigns",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Cursor"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["DRAFT", "SCHEDULED", "SENDING", "SENT"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of campaigns",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Campaign"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Campaigns"],
+        "summary": "Create campaign",
+        "description": "Create a new email campaign",
+        "operationId": "createCampaign",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "type", "templateId", "subject"],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["ALL", "SEGMENT", "FILTERED"]
+                  },
+                  "templateId": {
+                    "type": "string"
+                  },
+                  "segmentId": {
+                    "type": "string"
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["DRAFT", "SCHEDULED"],
+                    "default": "DRAFT"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Campaign created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Campaign"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaigns/{id}/send": {
+      "post": {
+        "tags": ["Campaigns"],
+        "summary": "Send or schedule campaign",
+        "description": "Send a campaign immediately or schedule for future delivery",
+        "operationId": "sendCampaign",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "scheduledAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true,
+                    "description": "Schedule time (null for immediate send)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Campaign scheduled/sending"
+          }
+        }
+      }
+    },
+    "/segments": {
+      "get": {
+        "tags": ["Segments"],
+        "summary": "List segments",
+        "description": "Get all audience segments",
+        "operationId": "listSegments",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of segments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Segment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Segments"],
+        "summary": "Create segment",
+        "description": "Create a new audience segment",
+        "operationId": "createSegment",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "filters"],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "filters": {
+                    "type": "object",
+                    "description": "Filter conditions"
+                  },
+                  "trackMembership": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              },
+              "example": {
+                "name": "Premium Users",
+                "filters": {
+                  "operator": "AND",
+                  "conditions": [
+                    {
+                      "field": "data.plan",
+                      "operator": "equals",
+                      "value": "premium"
+                    }
+                  ]
+                },
+                "trackMembership": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Segment created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Segment"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Public API",
+      "description": "Public API endpoints for sending emails and tracking events"
+    },
+    {
+      "name": "Contacts",
+      "description": "Contact management operations"
+    },
+    {
+      "name": "Templates",
+      "description": "Email template management"
+    },
+    {
+      "name": "Campaigns",
+      "description": "Email campaign management"
+    },
+    {
+      "name": "Segments",
+      "description": "Audience segmentation"
+    }
+  ]
+}

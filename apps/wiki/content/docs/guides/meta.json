@@ -1,0 +1,14 @@
+{
+  "title": "Guides",
+  "pages": [
+    "contacts",
+    "templates",
+    "campaigns",
+    "segments",
+    "workflows",
+    "events",
+    "webhooks",
+    "analytics",
+    "custom-domains"
+  ]
+}

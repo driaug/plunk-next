@@ -1,0 +1,10 @@
+{
+  "title": "Self-Hosting",
+  "pages": [
+    "introduction",
+    "docker",
+    "environment-variables",
+    "database-setup",
+    "email-setup"
+  ]
+}

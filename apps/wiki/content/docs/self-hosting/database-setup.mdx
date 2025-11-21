@@ -1,0 +1,228 @@
+---
+title: Database Setup
+description: Configure and manage your PostgreSQL database
+---
+
+## Prerequisites
+
+- PostgreSQL 14 or higher
+- Database created
+- Database user with permissions
+
+## Installation
+
+### Using Docker
+
+```bash
+docker run -d \
+  --name plunk-postgres \
+  -e POSTGRES_PASSWORD=your-password \
+  -e POSTGRES_DB=plunk \
+  -p 5432:5432 \
+  -v postgres_data:/var/lib/postgresql/data \
+  postgres:14
+```
+
+### Using Package Manager
+
+#### Ubuntu/Debian
+
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+```
+
+#### macOS
+
+```bash
+brew install postgresql@14
+brew services start postgresql@14
+```
+
+## Database Creation
+
+```sql
+CREATE DATABASE plunk;
+CREATE USER plunk WITH ENCRYPTED PASSWORD 'your-password';
+GRANT ALL PRIVILEGES ON DATABASE plunk TO plunk;
+```
+
+## Connection String
+
+```bash
+DATABASE_URL="postgresql://plunk:your-password@localhost:5432/plunk"
+DIRECT_DATABASE_URL="postgresql://plunk:your-password@localhost:5432/plunk"
+```
+
+## Running Migrations
+
+### Development
+
+```bash
+yarn workspace @repo/db migrate:dev
+```
+
+### Production
+
+```bash
+yarn workspace @repo/db migrate:prod
+```
+
+## Database Schema
+
+Plunk uses Prisma ORM. The schema is located at:
+```
+packages/db/prisma/schema.prisma
+```
+
+### Core Tables
+
+- **User**: User accounts
+- **Project**: Workspaces/tenants
+- **Membership**: User-project relationships
+- **Contact**: Email contacts
+- **Template**: Email templates
+- **Campaign**: Email campaigns
+- **Workflow**: Automated sequences
+- **Email**: Email tracking
+- **Event**: Custom events
+
+## Indexes
+
+Important indexes for performance:
+
+```sql
+-- Contact email index (unique per project)
+CREATE INDEX idx_contact_email ON "Contact" (email, "projectId");
+
+-- Contact subscription index
+CREATE INDEX idx_contact_subscribed ON "Contact" (subscribed);
+
+-- Email tracking indexes
+CREATE INDEX idx_email_contact ON "Email" ("contactId");
+CREATE INDEX idx_email_created ON "Email" ("createdAt");
+
+-- Event indexes
+CREATE INDEX idx_event_contact ON "Event" ("contactId");
+CREATE INDEX idx_event_name ON "Event" (event);
+```
+
+## Performance Tuning
+
+### For Large Datasets (1M+ contacts)
+
+```sql
+-- Increase shared buffers (25% of RAM)
+ALTER SYSTEM SET shared_buffers = '2GB';
+
+-- Increase work memory
+ALTER SYSTEM SET work_mem = '50MB';
+
+-- Increase maintenance work memory
+ALTER SYSTEM SET maintenance_work_mem = '512MB';
+
+-- Enable parallel queries
+ALTER SYSTEM SET max_parallel_workers_per_gather = 4;
+
+-- Reload configuration
+SELECT pg_reload_conf();
+```
+
+### Vacuum and Analyze
+
+Run regularly for optimal performance:
+
+```bash
+# Manual vacuum
+vacuumdb --analyze --verbose plunk
+
+# Auto-vacuum (enabled by default)
+```
+
+## Backup and Restore
+
+### Backup
+
+```bash
+pg_dump -U plunk -d plunk > backup-$(date +%Y%m%d).sql
+```
+
+### Restore
+
+```bash
+psql -U plunk -d plunk < backup.sql
+```
+
+### Automated Backups
+
+Set up cron job:
+
+```bash
+0 2 * * * pg_dump -U plunk plunk > /backups/plunk-$(date +\%Y\%m\%d).sql
+```
+
+## Monitoring
+
+### Connection Count
+
+```sql
+SELECT count(*) FROM pg_stat_activity;
+```
+
+### Database Size
+
+```sql
+SELECT pg_size_pretty(pg_database_size('plunk'));
+```
+
+### Table Sizes
+
+```sql
+SELECT
+  schemaname,
+  tablename,
+  pg_size_pretty(pg_total_relation_size(schemaname || '.' || tablename)) AS size
+FROM pg_tables
+WHERE schemaname = 'public'
+ORDER BY pg_total_relation_size(schemaname || '.' || tablename) DESC;
+```
+
+### Slow Queries
+
+```sql
+SELECT
+  query,
+  calls,
+  total_time,
+  mean_time
+FROM pg_stat_statements
+ORDER BY mean_time DESC
+LIMIT 10;
+```
+
+## Troubleshooting
+
+### Connection refused
+
+Check PostgreSQL is running:
+```bash
+sudo systemctl status postgresql
+```
+
+### Authentication failed
+
+Verify credentials in connection string.
+
+### Too many connections
+
+Increase max_connections:
+```sql
+ALTER SYSTEM SET max_connections = 200;
+SELECT pg_reload_conf();
+```
+
+## Next Steps
+
+- [Configure email delivery](/self-hosting/email-setup)
+- [Deploy with Docker](/self-hosting/docker)
+- [Environment variables](/self-hosting/environment-variables)

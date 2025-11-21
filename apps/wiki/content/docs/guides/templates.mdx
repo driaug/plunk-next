@@ -1,0 +1,424 @@
+---
+title: Templates
+description: Create reusable email templates
+---
+
+## Overview
+
+Email templates allow you to create reusable email designs that can be used across campaigns, workflows, and transactional emails. Templates support variable substitution, HTML/CSS styling, and visual editing.
+
+## Template Types
+
+### Transactional Templates
+
+Used for API-triggered emails (password resets, order confirmations, notifications):
+
+- No unsubscribe footer required
+- Sent via `/v1/send` API
+- Higher deliverability priority
+- Not subject to marketing regulations
+
+### Marketing Templates
+
+Used for campaigns and workflows:
+
+- Automatically includes unsubscribe footer
+- Subject to marketing email regulations
+- Used in campaigns and marketing workflows
+- Subscription status is respected
+
+## Creating Templates
+
+### Via Dashboard
+
+1. Navigate to **Templates** in your dashboard
+2. Click **Create Template**
+3. Choose template type (Transactional or Marketing)
+4. Name your template (used as identifier in API)
+5. Design your email using the visual editor
+6. Add variables using `{{variableName}}` syntax
+7. Save the template
+
+### Via API
+
+```bash
+curl -X POST https://api.useplunk.com/templates \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "welcome-email",
+    "subject": "Welcome to {{companyName}}!",
+    "body": "<h1>Hello {{firstName}}!</h1><p>Welcome to our platform.</p>",
+    "type": "TRANSACTIONAL"
+  }'
+```
+
+## Using Variables
+
+Variables use the `{{variableName}}` syntax and are replaced when the email is sent.
+
+### Basic Variables
+
+```html
+<h1>Hello {{firstName}}!</h1>
+<p>Your order #{{orderNumber}} has been shipped.</p>
+<p>Total: ${{amount}}</p>
+```
+
+When sending:
+
+```json
+{
+  "template": "order-shipped",
+  "data": {
+    "firstName": "John",
+    "orderNumber": "12345",
+    "amount": "99.99"
+  }
+}
+```
+
+### Fallback Values
+
+Use the `??` operator for fallback values:
+
+```html
+<h1>Hello {{firstName ?? 'there'}}!</h1>
+```
+
+If `firstName` is not provided, "there" will be used instead.
+
+### Nested Variables
+
+Access nested object properties with dot notation:
+
+```html
+<p>{{user.name}}</p>
+<p>{{order.items.0.name}}</p>
+```
+
+## Sending with Templates
+
+### Transactional Email
+
+```bash
+curl -X POST https://api.useplunk.com/v1/send \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "user@example.com",
+    "template": "welcome-email",
+    "subscribed": true,
+    "data": {
+      "firstName": "John",
+      "companyName": "Acme Inc"
+    }
+  }'
+```
+
+### In Campaigns
+
+When creating a campaign, select a template from the dropdown and the template's content will be used for all recipients.
+
+### In Workflows
+
+Add a "Send Email" step to your workflow and select a template. Each execution will render the template with the contact's data.
+
+## Managing Templates
+
+### List Templates
+
+```bash
+curl -X GET "https://api.useplunk.com/templates?limit=20" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Filter by Type
+
+```bash
+curl -X GET "https://api.useplunk.com/templates?type=MARKETING&limit=20" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Search Templates
+
+```bash
+curl -X GET "https://api.useplunk.com/templates?search=welcome&limit=20" \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Get Template
+
+```bash
+curl -X GET https://api.useplunk.com/templates/template_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+### Update Template
+
+```bash
+curl -X PATCH https://api.useplunk.com/templates/template_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subject": "Welcome to {{companyName}} - Updated!",
+    "body": "<h1>Hello {{firstName}}!</h1><p>New welcome message.</p>"
+  }'
+```
+
+### Delete Template
+
+```bash
+curl -X DELETE https://api.useplunk.com/templates/template_id \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+**Warning**: Cannot delete templates that are currently used in active campaigns or workflows.
+
+### Template Usage Stats
+
+See where your template is being used:
+
+```bash
+curl -X GET https://api.useplunk.com/templates/template_id/usage \
+  -H "Authorization: Bearer sk_your_secret_key" \
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "campaigns": 5,
+    "workflows": 3,
+    "totalSent": 15420
+  }
+}
+```
+
+## Template Best Practices
+
+### 1. Use Semantic HTML
+
+```html
+<!-- Good -->
+<h1>{{title}}</h1>
+<p>{{content}}</p>
+<a href="{{ctaUrl}}">{{ctaText}}</a>
+
+<!-- Avoid -->
+<div style="font-size: 24px">{{title}}</div>
+<span>{{content}}</span>
+```
+
+### 2. Always Provide Fallbacks
+
+```html
+<h1>Hello {{firstName ?? 'there'}}!</h1>
+<p>From {{companyName ?? 'our team'}}</p>
+```
+
+### 3. Mobile-Responsive Design
+
+```html
+<table style="max-width: 600px; width: 100%;">
+  <tr>
+    <td style="padding: 20px;">
+      <!-- Content -->
+    </td>
+  </tr>
+</table>
+```
+
+### 4. Inline CSS
+
+Email clients have varying CSS support. Always inline your styles:
+
+```html
+<h1 style="color: #333; font-size: 24px; margin: 0;">Hello!</h1>
+```
+
+### 5. Test Variables
+
+Always test your templates with sample data before using in production:
+
+```json
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@example.com",
+  "companyName": "Acme Inc"
+}
+```
+
+### 6. Unsubscribe Links
+
+For marketing templates, always include `{{unsubscribeUrl}}`:
+
+```html
+<p>
+  <a href="{{unsubscribeUrl}}">Unsubscribe</a> from these emails.
+</p>
+```
+
+This is automatically added to marketing templates, but you can customize the placement.
+
+## HTML Email Best Practices
+
+### Use Tables for Layout
+
+```html
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td>
+            <!-- Your content here -->
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+```
+
+### Inline Images
+
+Host images on a CDN and use absolute URLs:
+
+```html
+<img
+  src="https://cdn.example.com/logo.png"
+  alt="Company Logo"
+  width="200"
+  style="display: block;"
+/>
+```
+
+### Call-to-Action Buttons
+
+```html
+<table cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td style="border-radius: 4px; background-color: #007bff;">
+      <a
+        href="{{ctaUrl}}"
+        style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: bold;"
+      >
+        {{ctaText ?? 'Click Here'}}
+      </a>
+    </td>
+  </tr>
+</table>
+```
+
+### Dark Mode Support
+
+```html
+<style>
+  @media (prefers-color-scheme: dark) {
+    .content {
+      background-color: #1a1a1a !important;
+      color: #ffffff !important;
+    }
+  }
+</style>
+
+<div class="content" style="background-color: #ffffff; color: #000000;">
+  <!-- Content -->
+</div>
+```
+
+## Template Examples
+
+### Welcome Email
+
+```html
+<!DOCTYPE html>
+<html>
+<body>
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table width="600" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding: 20px; background-color: #f8f9fa;">
+              <h1 style="color: #333; margin: 0 0 20px 0;">
+                Welcome to {{companyName}}!
+              </h1>
+              <p style="color: #666; font-size: 16px; line-height: 1.5;">
+                Hi {{firstName}},
+              </p>
+              <p style="color: #666; font-size: 16px; line-height: 1.5;">
+                We're excited to have you on board. Here's what you can do next:
+              </p>
+              <ul style="color: #666; font-size: 16px; line-height: 1.8;">
+                <li>Complete your profile</li>
+                <li>Explore our features</li>
+                <li>Invite your team</li>
+              </ul>
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-radius: 4px; background-color: #007bff;">
+                    <a href="{{dashboardUrl}}" style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: bold;">
+                      Get Started
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+```
+
+### Order Confirmation
+
+```html
+<!DOCTYPE html>
+<html>
+<body>
+  <table width="600" cellpadding="0" cellspacing="0">
+    <tr>
+      <td style="padding: 20px;">
+        <h1>Order Confirmed</h1>
+        <p>Hi {{customerName}},</p>
+        <p>Your order #{{orderNumber}} has been confirmed.</p>
+
+        <table width="100%" cellpadding="10" cellspacing="0" style="border: 1px solid #ddd; margin: 20px 0;">
+          <tr style="background-color: #f8f9fa;">
+            <th align="left">Item</th>
+            <th align="right">Price</th>
+          </tr>
+          <tr>
+            <td>{{itemName}}</td>
+            <td align="right">${{itemPrice}}</td>
+          </tr>
+          <tr style="border-top: 2px solid #333;">
+            <td><strong>Total</strong></td>
+            <td align="right"><strong>${{total}}</strong></td>
+          </tr>
+        </table>
+
+        <p>Expected delivery: {{deliveryDate}}</p>
+        <p>
+          <a href="{{trackingUrl}}">Track your order</a>
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+```
+
+## Next Steps
+
+- [Create campaigns](/guides/campaigns) with your templates
+- [Build workflows](/guides/workflows) with automated emails
+- [Track performance](/guides/analytics) of your templates

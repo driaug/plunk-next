@@ -1,16 +1,88 @@
 ---
-title: Welkom op de Swyp wiki
-description: Hier vind je antwoord op al je vragen.
+title: Welcome to Plunk
+description: Open-source email platform for developers
 icon: House
 ---
 
-## Veelgestelde vragen
+## What is Plunk?
+
+Plunk is an open-source email platform designed for developers who need a powerful, scalable solution for transactional and marketing emails. Built with modern technologies and designed to handle millions of contacts, Plunk provides everything you need to manage your email communications.
+
+## Key Features
 
 <Cards>
-  <Card title="Wat is Swyp?" href="/about-swyp/what-is-swyp" />
-  <Card title="Wordt mijn speciale of onderhandelde prijs ondersteund?" href="/about-swyp/special-prices" />
-  <Card title="Zullen onze facturen nog steeds van onze leveranciers komen?" href="/about-swyp/invoices" />
-  <Card title="Heeft Swyp invloed op de verwerkingstijd of verzendtijd van een bestelling?" href="/about-swyp/processing-time" />
-  <Card title="Waarom moet ik mijn leveranciersaccounts koppelen?" href="/about-swyp/accounts" />
-  <Card title="Moet ik van leverancier veranderen? Heeft dit impact op mijn vertegenwoordigers?" href="/about-swyp/change-supplier" />
+  <Card title="Transactional Emails" href="/api-reference/public-api">
+    Send transactional emails via API with template support and variable substitution
+  </Card>
+  <Card title="Email Campaigns" href="/guides/campaigns">
+    Create and send one-time email broadcasts to your contacts with advanced scheduling
+  </Card>
+  <Card title="Marketing Automation" href="/guides/workflows">
+    Build automated email sequences with visual workflow builder and conditional logic
+  </Card>
+  <Card title="Contact Management" href="/guides/contacts">
+    Manage millions of contacts with custom fields and CSV import capabilities
+  </Card>
+  <Card title="Dynamic Segmentation" href="/guides/segments">
+    Create dynamic audience segments based on contact data and behavior
+  </Card>
+  <Card title="Event Tracking" href="/guides/events">
+    Track custom events and use them to trigger workflows and segment audiences
+  </Card>
+  <Card title="Email Templates" href="/guides/templates">
+    Create reusable email templates for transactional and marketing emails
+  </Card>
+  <Card title="Analytics" href="/guides/analytics">
+    Track email performance with detailed analytics on opens, clicks, and more
+  </Card>
 </Cards>
+
+## Scale & Performance
+
+Plunk is built to scale and currently processes approximately **1 million contacts monthly**. The platform includes:
+
+- Cursor-based pagination for efficient data retrieval
+- Background job processing with BullMQ for heavy operations
+- Redis caching for improved performance
+- Database optimization with proper indexing
+- Rate limiting and circuit breakers
+
+## Architecture
+
+The platform is built as a **Turborepo monorepo** with:
+
+- **API Server**: Express.js backend with TypeScript
+- **Worker Process**: Separate BullMQ worker for background jobs
+- **Web Dashboard**: Next.js application for managing your campaigns
+- **Database**: PostgreSQL with Prisma ORM
+- **Queue System**: Redis-backed BullMQ
+- **Email Delivery**: AWS SES integration
+
+## Quick Links
+
+<Cards>
+  <Card title="Get Started" href="/getting-started/introduction">
+    Learn how to set up Plunk and send your first email
+  </Card>
+  <Card title="API Reference" href="/api-reference/overview">
+    Explore the complete API documentation
+  </Card>
+  <Card title="Self-Hosting" href="/self-hosting/introduction">
+    Deploy Plunk on your own infrastructure
+  </Card>
+  <Card title="Guides" href="/guides/contacts">
+    Step-by-step guides for common use cases
+  </Card>
+</Cards>
+
+## Open Source
+
+Plunk is fully open-source and available on GitHub. Contributions are welcome!
+
+## Support
+
+If you need help or have questions:
+
+- Read the documentation
+- Check the GitHub repository
+- Join our community

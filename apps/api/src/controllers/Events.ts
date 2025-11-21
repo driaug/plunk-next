@@ -2,7 +2,7 @@ import {Controller, Get, Middleware, Post} from '@overnightjs/core';
 import type {Request, Response} from 'express';
 
 import type {AuthResponse} from '../middleware/auth.js';
-import {requireProjectAccess} from '../middleware/auth.js';
+import {requireAuth} from '../middleware/auth.js';
 import {EventService} from '../services/EventService.js';
 
 @Controller('events')
@@ -12,7 +12,7 @@ export class Events {
    * Track a custom event (can trigger workflows)
    */
   @Post('track')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async track(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {name, contactId, emailId, data} = req.body;
@@ -31,7 +31,7 @@ export class Events {
    * List events for the project
    */
   @Get('')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async list(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const eventName = req.query.eventName as string | undefined;
@@ -47,7 +47,7 @@ export class Events {
    * Get event statistics
    */
   @Get('stats')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async stats(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
@@ -63,7 +63,7 @@ export class Events {
    * Get events for a specific contact
    */
   @Get('contact/:contactId')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async getContactEvents(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const contactId = req.params.contactId;
@@ -83,7 +83,7 @@ export class Events {
    * Get unique event names for the project
    */
   @Get('names')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async getEventNames(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
 

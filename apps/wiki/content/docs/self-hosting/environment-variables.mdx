@@ -1,0 +1,169 @@
+---
+title: Environment Variables
+description: Complete environment variable reference
+---
+
+## Required Variables
+
+### Database
+
+```bash
+# PostgreSQL connection string
+DATABASE_URL="postgresql://user:password@host:5432/plunk"
+
+# Direct connection (for Prisma migrations)
+DIRECT_DATABASE_URL="postgresql://user:password@host:5432/plunk"
+```
+
+### Redis
+
+```bash
+# Redis connection URL
+REDIS_URL="redis://host:6379"
+```
+
+### Security
+
+```bash
+# JWT signing secret (generate with: openssl rand -base64 32)
+JWT_SECRET="your-secret-here"
+```
+
+### AWS SES (Email Delivery)
+
+```bash
+AWS_SES_REGION="us-east-1"
+AWS_SES_ACCESS_KEY_ID="your-access-key"
+AWS_SES_SECRET_ACCESS_KEY="your-secret-key"
+
+# SES Configuration Sets
+SES_CONFIGURATION_SET="plunk-tracking"
+SES_CONFIGURATION_SET_NO_TRACKING="plunk-no-tracking"
+```
+
+### Application URLs
+
+```bash
+API_URI="https://api.yourdomain.com"
+DASHBOARD_URI="https://app.yourdomain.com"
+LANDING_URI="https://www.yourdomain.com"
+
+# For Next.js (build time)
+NEXT_PUBLIC_API_URI="https://api.yourdomain.com"
+NEXT_PUBLIC_DASHBOARD_URI="https://app.yourdomain.com"
+NEXT_PUBLIC_LANDING_URI="https://www.yourdomain.com"
+```
+
+## Optional Variables
+
+### AWS S3 (Asset Storage)
+
+```bash
+AWS_S3_BUCKET="your-bucket"
+AWS_S3_ACCESS_KEY_ID="your-access-key"
+AWS_S3_ACCESS_KEY_SECRET="your-secret-key"
+AWS_CLOUDFRONT_DISTRIBUTION_ID="your-distribution-id"
+```
+
+### OAuth Providers
+
+```bash
+# GitHub OAuth
+GITHUB_OAUTH_CLIENT="your-client-id"
+GITHUB_OAUTH_SECRET="your-client-secret"
+
+# Google OAuth
+GOOGLE_OAUTH_CLIENT="your-client-id"
+GOOGLE_OAUTH_SECRET="your-client-secret"
+```
+
+### Stripe Billing
+
+```bash
+STRIPE_SK="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+
+# Stripe Products
+STRIPE_PRICE_ONBOARDING="price_..."
+STRIPE_PRICE_EMAIL_USAGE="price_..."
+
+# Stripe Metering
+STRIPE_METER_EVENT_NAME="email_sent"
+```
+
+### Internal
+
+```bash
+# API key for internal services
+PLUNK_API_KEY="sk_..."
+
+# Node environment
+NODE_ENV="production"
+```
+
+## Example .env File
+
+```bash
+# Database
+DATABASE_URL="postgresql://postgres:password@localhost:5432/plunk"
+DIRECT_DATABASE_URL="postgresql://postgres:password@localhost:5432/plunk"
+
+# Redis
+REDIS_URL="redis://localhost:6379"
+
+# Security
+JWT_SECRET="generated-secret-here"
+
+# AWS SES
+AWS_SES_REGION="us-east-1"
+AWS_SES_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"
+AWS_SES_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+SES_CONFIGURATION_SET="plunk-tracking"
+SES_CONFIGURATION_SET_NO_TRACKING="plunk-no-tracking"
+
+# AWS S3 (optional)
+AWS_S3_BUCKET="plunk-assets"
+AWS_S3_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"
+AWS_S3_ACCESS_KEY_SECRET="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+
+# Application URLs
+API_URI="http://localhost:3001"
+DASHBOARD_URI="http://localhost:3000"
+LANDING_URI="http://localhost:3002"
+
+# Next.js Public URLs
+NEXT_PUBLIC_API_URI="http://localhost:3001"
+NEXT_PUBLIC_DASHBOARD_URI="http://localhost:3000"
+NEXT_PUBLIC_LANDING_URI="http://localhost:3002"
+
+# Node Environment
+NODE_ENV="development"
+```
+
+## Generating Secrets
+
+### JWT Secret
+
+```bash
+openssl rand -base64 32
+```
+
+### Strong Passwords
+
+```bash
+openssl rand -base64 24
+```
+
+## Security Best Practices
+
+1. **Never commit secrets** to version control
+2. **Use environment-specific files** (.env.production, .env.development)
+3. **Rotate secrets regularly**
+4. **Use secret management** (AWS Secrets Manager, HashiCorp Vault) in production
+5. **Limit access** to production environment variables
+
+## Next Steps
+
+- [Set up database](/self-hosting/database-setup)
+- [Configure email delivery](/self-hosting/email-setup)
+- [Deploy with Docker](/self-hosting/docker)

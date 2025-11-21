@@ -2,7 +2,7 @@ import {Controller, Delete, Get, Middleware, Patch, Post} from '@overnightjs/cor
 import type {Request, Response} from 'express';
 
 import type {AuthResponse} from '../middleware/auth.js';
-import {requireProjectAccess} from '../middleware/auth.js';
+import {requireAuth} from '../middleware/auth.js';
 import {SegmentService} from '../services/SegmentService.js';
 
 @Controller('segments')
@@ -12,7 +12,7 @@ export class Segments {
    * List all segments for the authenticated project
    */
   @Get('')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async list(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
 
@@ -26,7 +26,7 @@ export class Segments {
    * Get a specific segment by ID with member count
    */
   @Get(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async get(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const segmentId = req.params.id;
@@ -45,7 +45,7 @@ export class Segments {
    * Get contacts that match a segment's filters
    */
   @Get(':id/contacts')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async getContacts(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const segmentId = req.params.id;
@@ -66,7 +66,7 @@ export class Segments {
    * Create a new segment
    */
   @Post('')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async create(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const {name, description, filters, trackMembership} = req.body;
@@ -94,7 +94,7 @@ export class Segments {
    * Update a segment
    */
   @Patch(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async update(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const segmentId = req.params.id;
@@ -123,7 +123,7 @@ export class Segments {
    * Delete a segment
    */
   @Delete(':id')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async delete(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const segmentId = req.params.id;
@@ -142,7 +142,7 @@ export class Segments {
    * Recompute segment membership for all contacts
    */
   @Post(':id/compute')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async compute(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const segmentId = req.params.id;
@@ -161,7 +161,7 @@ export class Segments {
    * Refresh segment member count
    */
   @Post(':id/refresh')
-  @Middleware([requireProjectAccess])
+  @Middleware([requireAuth])
   public async refresh(req: Request, res: Response) {
     const auth = res.locals.auth as AuthResponse;
     const segmentId = req.params.id;
