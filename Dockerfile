@@ -8,12 +8,15 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Enable Corepack for Yarn 4
-RUN corepack enable
+# Enable Corepack and set Yarn version
+RUN corepack enable && corepack prepare yarn@4.9.1 --activate
+
+# Copy Yarn configuration and release
+COPY .yarnrc.yml ./
+COPY .yarn/releases ./.yarn/releases
 
 # Copy package files for dependency installation
-COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn ./.yarn
+COPY package.json yarn.lock ./
 
 # Copy workspace package.json files
 COPY apps/api/package.json ./apps/api/
@@ -27,7 +30,6 @@ COPY packages/types/package.json ./packages/types/
 COPY packages/email/package.json ./packages/email/
 
 # Install dependencies
-# For Yarn 4: Plain install works best in Docker (respects lockfile automatically)
 RUN yarn install
 
 # ============================================
@@ -36,13 +38,15 @@ RUN yarn install
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Enable Corepack for Yarn 4
-RUN corepack enable
+# Enable Corepack and set Yarn version
+RUN corepack enable && corepack prepare yarn@4.9.1 --activate
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/.yarn ./.yarn
 COPY --from=deps /app/.yarnrc.yml ./
+COPY --from=deps /app/package.json ./
+COPY --from=deps /app/yarn.lock ./
 
 # Copy source code
 COPY . .
