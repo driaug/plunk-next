@@ -1,0 +1,81 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Cache Yarn dependencies for faster workflow runs
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          # Release type determines how versions are calculated
+          release-type: node
+
+          # Package name for release notes
+          package-name: plunk
+
+          # Changelog sections configuration
+          changelog-types: |
+            [
+              {"type":"feat","section":"Features","hidden":false},
+              {"type":"fix","section":"Bug Fixes","hidden":false},
+              {"type":"perf","section":"Performance Improvements","hidden":false},
+              {"type":"refactor","section":"Code Refactoring","hidden":false},
+              {"type":"docs","section":"Documentation","hidden":false},
+              {"type":"chore","section":"Miscellaneous","hidden":true},
+              {"type":"style","section":"Styles","hidden":true},
+              {"type":"test","section":"Tests","hidden":true}
+            ]
+
+      # Output release information (for debugging)
+      - name: Release outputs
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          echo "Release created: ${{ steps.release.outputs.release_created }}"
+          echo "Tag name: ${{ steps.release.outputs.tag_name }}"
+          echo "Version: ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}"
+          echo "SHA: ${{ steps.release.outputs.sha }}"
+
+# How it works:
+# 1. On every push to main, Release Please analyzes commits
+# 2. It looks for conventional commit messages (feat:, fix:, etc.)
+# 3. If releasable changes are found, it:
+#    a. Opens/updates a "Release PR" with changelog
+#    b. When you merge the Release PR, it creates a git tag
+#    c. The git tag triggers the docker-publish.yml workflow
+#    d. Docker images are built with proper version tags
+#
+# Conventional Commit Format (use these as PR titles):
+# - feat: new feature → bumps MINOR (1.0.0 → 1.1.0)
+# - fix: bug fix → bumps PATCH (1.0.0 → 1.0.1)
+# - feat!: breaking change → bumps MAJOR (1.0.0 → 2.0.0)
+# - fix!: breaking bug fix → bumps MAJOR (1.0.0 → 2.0.0)
+# - docs: documentation → no version bump
+# - chore: maintenance → no version bump
+# - refactor: code refactoring → no version bump
+#
+# Examples:
+# ✅ "feat: add email template editor"
+# ✅ "fix: resolve memory leak in worker process"
+# ✅ "feat!: redesign API authentication"
+# ✅ "fix: correct contact import validation"
+# ❌ "Added new feature" (missing type prefix)
+# ❌ "Bug fix" (missing type prefix)

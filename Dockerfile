@@ -45,7 +45,10 @@ COPY apps/wiki/next.config.mjs ./apps/wiki/next.config.mjs
 COPY apps/wiki/tsconfig.json ./apps/wiki/tsconfig.json
 
 # Install dependencies (runs on build platform, fetches binaries for target platform)
-RUN echo "Building on $BUILDPLATFORM for $TARGETPLATFORM" && \
+# Use cache mounts for Yarn cache to speed up dependency installation
+RUN --mount=type=cache,target=/root/.yarn/berry/cache,sharing=locked \
+    --mount=type=cache,target=/root/.cache/yarn,sharing=locked \
+    echo "Building on $BUILDPLATFORM for $TARGETPLATFORM" && \
     yarn install --immutable
 
 # ============================================
@@ -77,7 +80,9 @@ RUN yarn workspace @repo/db db:generate
 
 # Build all packages and applications
 # Turbo will handle the dependency graph and build order
-RUN yarn build
+# Use cache mount for Turbo cache to speed up builds
+RUN --mount=type=cache,target=/app/.turbo,sharing=locked \
+    yarn build
 
 # Ensure directories exist (create empty ones if build didn't generate them)
 RUN mkdir -p \
@@ -120,7 +125,10 @@ COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY packages/eslint-config/package.json ./packages/eslint-config/
 
 # Install production dependencies only
-RUN yarn workspaces focus --production && yarn cache clean
+# Use cache mounts for Yarn cache
+RUN --mount=type=cache,target=/root/.yarn/berry/cache,sharing=locked \
+    --mount=type=cache,target=/root/.cache/yarn,sharing=locked \
+    yarn workspaces focus --production && yarn cache clean
 
 # ============================================
 # Stage 4: Production Runtime
