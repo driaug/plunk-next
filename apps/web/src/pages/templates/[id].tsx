@@ -23,6 +23,7 @@ import {useRouter} from 'next/router';
 import {useEffect, useState} from 'react';
 import {toast} from 'sonner';
 import useSWR from 'swr';
+import {TemplateSchemas} from '@repo/shared';
 
 export default function TemplateEditorPage() {
   const router = useRouter();
@@ -76,7 +77,7 @@ export default function TemplateEditorPage() {
     setIsSubmitting(true);
 
     try {
-      await network.fetch('PATCH', `/templates/${id}`, {
+      await network.fetch<Template, typeof TemplateSchemas.update>('PATCH', `/templates/${id}`, {
         name,
         description: description || undefined,
         subject,

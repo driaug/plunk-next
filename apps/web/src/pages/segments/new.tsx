@@ -21,6 +21,8 @@ import {useRouter} from 'next/router';
 import {useState} from 'react';
 import {toast} from 'sonner';
 import type {SegmentFilter} from '@repo/types';
+import type {Segment} from '@repo/db';
+import {SegmentSchemas} from '@repo/shared';
 
 const FILTER_OPERATORS = [
   {value: 'equals', label: 'Equals'},
@@ -77,7 +79,7 @@ export default function NewSegmentPage() {
     setIsSubmitting(true);
 
     try {
-      const segment = await network.fetch('POST', '/segments', {
+      const segment = await network.fetch<Segment, typeof SegmentSchemas.create>('POST', '/segments', {
         name,
         description: description || undefined,
         filters,

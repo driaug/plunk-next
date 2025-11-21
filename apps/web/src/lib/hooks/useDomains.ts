@@ -1,5 +1,6 @@
 import useSWR from 'swr';
 import {network} from '../network';
+import {DomainSchemas} from '@repo/shared';
 
 export interface Domain {
   id: string;
@@ -24,8 +25,8 @@ export interface DomainVerificationStatus {
 export function useDomains(projectId: string | undefined) {
   const {data, error, mutate, isLoading} = useSWR<Domain[]>(
     projectId ? `/domains/project/${projectId}` : null,
-    async url => {
-      return network.fetch('GET', url);
+    async (url: string) => {
+      return network.fetch<Domain[]>('GET', url);
     },
   );
 
@@ -42,7 +43,7 @@ export function useDomains(projectId: string | undefined) {
  */
 export function useAddDomain() {
   const addDomain = async (projectId: string, domain: string) => {
-    return network.fetch<Domain, {projectId: string; domain: string}>('POST', '/domains', {
+    return network.fetch<Domain, typeof DomainSchemas.create>('POST', '/domains', {
       projectId,
       domain,
     });

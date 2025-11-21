@@ -26,6 +26,7 @@ import Link from 'next/link';
 import {useState} from 'react';
 import {toast} from 'sonner';
 import useSWR from 'swr';
+import {WorkflowSchemas} from '@repo/shared';
 
 interface PaginatedWorkflows {
   workflows: (Workflow & {_count?: {steps: number; executions: number}})[];
@@ -68,7 +69,7 @@ export default function WorkflowsPage() {
 
   const handleToggleEnabled = async (workflowId: string, currentlyEnabled: boolean) => {
     try {
-      await network.fetch('PATCH', `/workflows/${workflowId}`, {
+      await network.fetch<Workflow, typeof WorkflowSchemas.update>('PATCH', `/workflows/${workflowId}`, {
         enabled: !currentlyEnabled,
       });
       toast.success(`Workflow ${!currentlyEnabled ? 'enabled' : 'disabled'} successfully`);
@@ -306,12 +307,15 @@ function CreateWorkflowDialog({open, onOpenChange, onSuccess}: CreateWorkflowDia
     setIsSubmitting(true);
 
     try {
-      const workflow = await network.fetch<Workflow>('POST', '/workflows', {
+      const workflow = await network.fetch<Workflow, typeof WorkflowSchemas.create>('POST', '/workflows', {
         name,
         description: description || undefined,
-        eventName: eventName.trim(),
+        triggerType: 'EVENT' as const,
+        triggerConfig: {
+          eventName: eventName.trim(),
+          allowReentry,
+        },
         enabled: false,
-        allowReentry,
       });
 
       toast.success('Workflow created successfully');

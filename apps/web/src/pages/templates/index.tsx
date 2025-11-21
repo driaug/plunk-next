@@ -27,6 +27,7 @@ import Link from 'next/link';
 import {useState} from 'react';
 import {toast} from 'sonner';
 import useSWR from 'swr';
+import {TemplateSchemas} from '@repo/shared';
 
 interface PaginatedTemplates {
   templates: Template[];
@@ -315,7 +316,7 @@ function CreateTemplateDialog({open, onOpenChange, onSuccess}: CreateTemplateDia
     setIsSubmitting(true);
 
     try {
-      const template = await network.fetch<Template>('POST', '/templates', {
+      const template = await network.fetch<Template, typeof TemplateSchemas.create>('POST', '/templates', {
         name,
         description: description || undefined,
         subject,

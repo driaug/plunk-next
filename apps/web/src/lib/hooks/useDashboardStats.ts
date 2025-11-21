@@ -41,18 +41,18 @@ export interface DashboardStats {
  */
 export function useDashboardStats(): DashboardStats {
   // Fetch activity stats (last 30 days by default)
-  const {data: activityStats, error: activityError} = useSWR<ActivityStats>('/activity/stats', async url => {
-    return network.fetch('GET', url);
+  const {data: activityStats, error: activityError} = useSWR<ActivityStats>('/activity/stats', async (url: string) => {
+    return network.fetch<ActivityStats>('GET', url);
   });
 
   // Fetch contacts (only need the total count)
-  const {data: contactsData, error: contactsError} = useSWR<ContactsResponse>('/contacts?limit=1', async url => {
-    return network.fetch('GET', url);
+  const {data: contactsData, error: contactsError} = useSWR<ContactsResponse>('/contacts?limit=1', async (url: string) => {
+    return network.fetch<ContactsResponse>('GET', url);
   });
 
   // Fetch campaigns (only need the total count)
-  const {data: campaignsData, error: campaignsError} = useSWR<CampaignsResponse>('/campaigns?pageSize=1', async url => {
-    return network.fetch('GET', url);
+  const {data: campaignsData, error: campaignsError} = useSWR<CampaignsResponse>('/campaigns?pageSize=1', async (url: string) => {
+    return network.fetch<CampaignsResponse>('GET', url);
   });
 
   const isLoading = !activityStats && !contactsData && !campaignsData;

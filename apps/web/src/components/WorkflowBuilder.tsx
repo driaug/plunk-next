@@ -38,6 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@repo/ui';
+import {WorkflowSchemas} from '@repo/shared';
 
 interface WorkflowBuilderProps {
   workflowId: string;
@@ -583,12 +584,11 @@ export function WorkflowBuilder({workflowId, steps, onUpdate}: WorkflowBuilderPr
         }
 
         // Create the new step (autoConnect: false because we manually create the transition with branch info)
-        const newStep = await network.fetch<WorkflowStep>('POST', `/workflows/${workflowId}/steps`, {
-          type: stepType,
+        const newStep = await network.fetch<WorkflowStep, typeof WorkflowSchemas.addStep>('POST', `/workflows/${workflowId}/steps`, {
+          type: stepType as WorkflowStep['type'],
           name: `New ${stepType.toLowerCase().replace('_', ' ')}`,
           position: {x: 0, y: 0}, // Will be auto-positioned by dagre layout
           config: {},
-          autoConnect: false, // Disable auto-connect - we'll create the transition manually with proper branch condition
         });
 
         const newStepId = newStep.id;
@@ -609,7 +609,7 @@ export function WorkflowBuilder({workflowId, steps, onUpdate}: WorkflowBuilderPr
           console.log(`    [${idx}] to: ${t.toStepId}, branch: ${cond?.branch}`);
         });
 
-        await network.fetch('POST', `/workflows/${workflowId}/transitions`, {
+        await network.fetch<any, typeof WorkflowSchemas.createTransition>('POST', `/workflows/${workflowId}/transitions`, {
           fromStepId: addStepContext.fromStepId,
           toStepId: newStepId,
           condition,

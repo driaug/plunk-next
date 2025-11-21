@@ -100,13 +100,18 @@ const ChartStyle = ({id, config}: {id: string; config: ChartConfig}) => {
 // ============================================
 
 interface ChartTooltipContentProps
-  extends React.ComponentProps<typeof RechartsPrimitive.Tooltip>,
-    React.ComponentProps<'div'> {
+  extends Omit<React.ComponentProps<typeof RechartsPrimitive.Tooltip>, never>,
+    Omit<React.ComponentProps<'div'>, 'content'> {
   hideLabel?: boolean;
   hideIndicator?: boolean;
   indicator?: 'line' | 'dot' | 'dashed';
   nameKey?: string;
   labelKey?: string;
+  payload?: any;
+  label?: any;
+  labelFormatter?: any;
+  formatter?: any;
+  active?: any;
 }
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
@@ -167,7 +172,7 @@ const ChartTooltipContent = React.forwardRef<HTMLDivElement, ChartTooltipContent
       >
         {!hideLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
-          {payload.map((item, index) => {
+          {payload.map((item: any, index: number) => {
             const key = `${nameKey || item.name || item.dataKey || 'value'}`;
             const itemConfig = config[key];
             const indicatorColor = color || item.payload.fill || item.color;
@@ -236,10 +241,11 @@ ChartTooltipContent.displayName = 'ChartTooltipContent';
 // ============================================
 
 interface ChartLegendContentProps
-  extends React.ComponentProps<'div'>,
-    Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> {
+  extends Omit<React.ComponentProps<'div'>, 'payload'> {
   hideIcon?: boolean;
   nameKey?: string;
+  payload?: any;
+  verticalAlign?: any;
 }
 
 const ChartLegend = RechartsPrimitive.Legend;
@@ -257,7 +263,7 @@ const ChartLegendContent = React.forwardRef<HTMLDivElement, ChartLegendContentPr
         ref={ref}
         className={cn('flex items-center justify-center gap-4', verticalAlign === 'top' ? 'pb-3' : 'pt-3', className)}
       >
-        {payload.map(item => {
+        {payload.map((item: any) => {
           const key = `${nameKey || item.dataKey || 'value'}`;
           const itemConfig = config[key];
 

@@ -31,6 +31,7 @@ import {useRouter} from 'next/router';
 import {useEffect, useState} from 'react';
 import {toast} from 'sonner';
 import useSWR from 'swr';
+import {z} from 'zod';
 
 interface CampaignStats {
   totalRecipients: number;
@@ -95,7 +96,7 @@ export default function CampaignDetailsPage() {
     }
 
     try {
-      await network.fetch('POST', `/campaigns/${id}/send`, {});
+      await network.fetch<void>('POST', `/campaigns/${id}/send`);
       toast.success('Campaign is being sent!');
       void mutate();
     } catch (error) {
@@ -118,7 +119,10 @@ export default function CampaignDetailsPage() {
     }
 
     try {
-      await network.fetch('POST', `/campaigns/${id}/send`, {
+      const ScheduleSchema = z.object({
+        scheduledFor: z.string(),
+      });
+      await network.fetch<void, typeof ScheduleSchema>('POST', `/campaigns/${id}/send`, {
         scheduledFor: scheduledDate.toISOString(),
       });
       toast.success(`Campaign scheduled for ${scheduledDate.toLocaleString()}`);
@@ -138,7 +142,26 @@ export default function CampaignDetailsPage() {
     setIsSubmitting(true);
 
     try {
-      await network.fetch('PUT', `/campaigns/${id}`, editedCampaign);
+      const UpdateCampaignSchema = z.object({
+        name: z.string().optional(),
+        description: z.string().optional(),
+        subject: z.string().optional(),
+        body: z.string().optional(),
+        from: z.string().optional(),
+        replyTo: z.string().optional(),
+        audienceType: z.nativeEnum(CampaignAudienceType).optional(),
+        segmentId: z.string().optional(),
+      });
+      await network.fetch<Campaign, typeof UpdateCampaignSchema>('PUT', `/campaigns/${id}`, {
+        name: editedCampaign.name,
+        description: editedCampaign.description || undefined,
+        subject: editedCampaign.subject,
+        body: editedCampaign.body,
+        from: editedCampaign.from,
+        replyTo: editedCampaign.replyTo || undefined,
+        audienceType: editedCampaign.audienceType,
+        segmentId: editedCampaign.segmentId || undefined,
+      });
       toast.success('Campaign updated successfully');
       setHasChanges(false);
       void mutate();

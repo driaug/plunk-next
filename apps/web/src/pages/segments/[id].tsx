@@ -35,6 +35,7 @@ import {useEffect, useState} from 'react';
 import {toast} from 'sonner';
 import useSWR from 'swr';
 import type {SegmentFilter} from '@repo/types';
+import {SegmentSchemas} from '@repo/shared';
 
 const FILTER_OPERATORS = [
   {value: 'equals', label: 'Equals'},
@@ -97,7 +98,7 @@ export default function SegmentDetailPage() {
       setName(segment.name);
       setDescription(segment.description || '');
       setTrackMembership(segment.trackMembership);
-      setFilters((segment.filters as SegmentFilter[]) || []);
+      setFilters((segment.filters as unknown as SegmentFilter[]) || []);
     }
   }, [segment]);
 
@@ -118,7 +119,7 @@ export default function SegmentDetailPage() {
     setIsSubmitting(true);
 
     try {
-      await network.fetch('PATCH', `/segments/${id}`, {
+      await network.fetch<Segment, typeof SegmentSchemas.update>('PATCH', `/segments/${id}`, {
         name,
         description: description || undefined,
         filters,

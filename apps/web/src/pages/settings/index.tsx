@@ -110,7 +110,7 @@ export default function Settings() {
       setErrorMessage(null);
       setSuccessMessage(null);
 
-      const updatedProject = await network.fetch<typeof activeProject, z.infer<typeof ProjectSchemas.update>>(
+      const updatedProject = await network.fetch<typeof activeProject, typeof ProjectSchemas.update>(
         'PATCH',
         `/users/@me/projects/${activeProject.id}`,
         values,

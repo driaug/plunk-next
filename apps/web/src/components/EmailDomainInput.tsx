@@ -38,15 +38,16 @@ export function EmailDomainInput({value, onChange, id, placeholder, required, la
   useEffect(() => {
     if (value && value.includes('@')) {
       const [local, domain] = value.split('@');
-      setLocalPart(local);
+      setLocalPart(local ?? '');
 
       // Check if the domain is in our verified list
-      const matchingDomain = verifiedDomains.find(d => d.domain === domain);
+      const domainPart = domain ?? '';
+      const matchingDomain = verifiedDomains.find(d => d.domain === domainPart);
       if (matchingDomain) {
-        setSelectedDomain(domain);
+        setSelectedDomain(domainPart);
       } else {
         // If domain not verified, keep it in the domain field
-        setSelectedDomain(domain);
+        setSelectedDomain(domainPart);
       }
     } else if (value) {
       // If no @ sign, treat entire value as local part
@@ -57,7 +58,10 @@ export function EmailDomainInput({value, onChange, id, placeholder, required, la
   // Initialize selected domain with first verified domain if none selected
   useEffect(() => {
     if (!selectedDomain && verifiedDomains.length > 0) {
-      setSelectedDomain(verifiedDomains[0].domain);
+      const firstDomain = verifiedDomains[0];
+      if (firstDomain) {
+        setSelectedDomain(firstDomain.domain);
+      }
     }
   }, [verifiedDomains, selectedDomain]);
 
@@ -153,7 +157,7 @@ export function EmailDomainInput({value, onChange, id, placeholder, required, la
         </Select>
       </div>
       {verifiedDomains.length === 1 && (
-        <p className="text-xs text-neutral-500 mt-1">Using your verified domain: {verifiedDomains[0].domain}</p>
+        <p className="text-xs text-neutral-500 mt-1">Using your verified domain: {verifiedDomains[0]?.domain}</p>
       )}
     </div>
   );

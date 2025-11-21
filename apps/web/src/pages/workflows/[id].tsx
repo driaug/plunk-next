@@ -44,6 +44,7 @@ import {toast} from 'sonner';
 import useSWR from 'swr';
 import {WorkflowBuilder} from '../../components/WorkflowBuilder';
 import {ReactFlowProvider} from '@xyflow/react';
+import {ContactSchemas, WorkflowSchemas} from '@repo/shared';
 
 interface WorkflowWithDetails extends Workflow {
   steps: (WorkflowStep & {
@@ -89,7 +90,7 @@ const STEP_TYPE_COLORS = {
 export default function WorkflowEditorPage() {
   const router = useRouter();
   const {id} = router.query;
-  const [activeTab, setActiveTab] = useState<'builder' | 'executions'>('builder');
+  const [activeTab, setActiveTab] = useState<'builder' | 'executions' | 'debug'>('builder');
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showTestDialog, setShowTestDialog] = useState(false);
   const [editingStep, setEditingStep] = useState<WorkflowStep | null>(null);
@@ -107,7 +108,7 @@ export default function WorkflowEditorPage() {
     if (!workflow) return;
 
     try {
-      await network.fetch('PATCH', `/workflows/${id}`, {
+      await network.fetch<Workflow, typeof WorkflowSchemas.update>('PATCH', `/workflows/${id}`, {
         enabled: !workflow.enabled,
       });
       toast.success(`Workflow ${!workflow.enabled ? 'enabled' : 'disabled'} successfully`);
@@ -119,7 +120,7 @@ export default function WorkflowEditorPage() {
 
   const handleUpdateSettings = async (data: {name: string; description?: string}) => {
     try {
-      await network.fetch('PATCH', `/workflows/${id}`, data);
+      await network.fetch<Workflow, typeof WorkflowSchemas.update>('PATCH', `/workflows/${id}`, data);
       toast.success('Workflow updated successfully');
       void mutate();
       setShowSettingsDialog(false);
@@ -597,7 +598,7 @@ function TestWorkflowDialog({open, onOpenChange, workflowId}: TestWorkflowDialog
       let contactId = contacts.contacts.find(c => c.email === email)?.id;
 
       if (!contactId) {
-        const newContact = await network.fetch<{id: string}>('POST', '/contacts', {
+        const newContact = await network.fetch<{id: string}, typeof ContactSchemas.create>('POST', '/contacts', {
           email,
           subscribed: true,
         });
@@ -605,7 +606,7 @@ function TestWorkflowDialog({open, onOpenChange, workflowId}: TestWorkflowDialog
       }
 
       // Start workflow execution
-      await network.fetch('POST', `/workflows/${workflowId}/executions`, {
+      await network.fetch<WorkflowExecution, typeof WorkflowSchemas.startExecution>('POST', `/workflows/${workflowId}/executions`, {
         contactId,
       });
 
@@ -711,7 +712,7 @@ function AddStepDialog({open, onOpenChange, workflowId, onSuccess}: AddStepDialo
 
           // Set default field if available
           if (response.fields.length > 0 && !conditionField) {
-            setConditionField(response.fields[0]);
+            setConditionField(response.fields[0]!);
           }
         } catch (error) {
           console.error('Failed to fetch available fields:', error);
@@ -806,13 +807,12 @@ function AddStepDialog({open, onOpenChange, workflowId, onSuccess}: AddStepDialo
         };
       }
 
-      await network.fetch('POST', `/workflows/${workflowId}/steps`, {
+      await network.fetch<WorkflowStep, typeof WorkflowSchemas.addStep>('POST', `/workflows/${workflowId}/steps`, {
         type,
         name,
         position: {x: 100, y: 100},
         config,
         templateId: type === 'SEND_EMAIL' ? templateId : undefined,
-        autoConnect: false, // Disable auto-connect to prevent unwanted transitions
       });
 
       toast.success('Step added successfully');
@@ -1305,7 +1305,7 @@ function EditStepDialog({step, workflowId, open, onOpenChange, onSuccess}: EditS
         };
       }
 
-      await network.fetch('PATCH', `/workflows/${workflowId}/steps/${step.id}`, {
+      await network.fetch<WorkflowStep, typeof WorkflowSchemas.updateStep>('PATCH', `/workflows/${workflowId}/steps/${step.id}`, {
         name,
         config: newConfig,
         templateId: step.type === 'SEND_EMAIL' ? templateId : undefined,

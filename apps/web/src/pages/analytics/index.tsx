@@ -265,7 +265,7 @@ export default function AnalyticsPage() {
                     stroke="var(--color-clicks)"
                     stackId="a"
                   />
-                  <ChartLegend content={<ChartLegendContent />} />
+                  <ChartLegend content={ChartLegendContent as any} />
                 </AreaChart>
               </ChartContainer>
             )}
