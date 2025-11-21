@@ -191,12 +191,13 @@ jobs:
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
           echo "Manifest digest: $DIGEST"
 
-      - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.inspect.outputs.digest }}
-          push-to-registry: true
+      # Attestations only work for public repos or org-owned private repos
+      # - name: Generate artifact attestation
+      #   uses: actions/attest-build-provenance@v1
+      #   with:
+      #     subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      #     subject-digest: ${{ steps.inspect.outputs.digest }}
+      #     push-to-registry: true
 
       - name: Create release summary
         run: |
