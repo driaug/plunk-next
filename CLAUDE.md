@@ -50,11 +50,6 @@ When implementing features that query or process contacts, segments, or campaign
 - **Run migrations (dev)**: `yarn workspace @repo/db migrate:dev`
 - **Deploy migrations (prod)**: `yarn workspace @repo/db migrate:prod`
 
-### Translations (react-intl + Tolgee)
-
-- **Extract and push**: `yarn translations:up` - Extracts keys from code and pushes to Tolgee
-- **Pull from Tolgee**: `yarn translations:down` - Downloads translations and commits .json files
-
 ## Architecture
 
 ### Applications (`apps/`)
@@ -90,11 +85,9 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment guidance.
 ## Key Technologies
 
 - **Frontend**: React 19, Next.js 15.3, Tailwind CSS, Framer Motion
-- **Backend**: Express.js, Prisma, Redis (ioredis), Stripe, Typesense
+- **Backend**: Express.js, Prisma, Redis (ioredis), Stripe
 - **UI Library**: Radix UI primitives, ShadCN components
 - **Authentication**: JWT with bcrypt
-- **Monitoring**: Sentry, PostHog
-- **Internationalization**: react-intl with Tolgee
 
 ## Code Standards
 
@@ -117,12 +110,23 @@ between groups.
 
 ## Environment Variables
 
-Required for builds and deployment (see turbo.json):
+Required for builds and deployment (see turbo.json and .env.self-host.example):
 
+**Build Time:**
+- Database: `DATABASE_URL`, `DIRECT_DATABASE_URL` (for Prisma client generation)
+- Next.js Public URLs: `NEXT_PUBLIC_API_URI`, `NEXT_PUBLIC_LANDING_URI`, `NEXT_PUBLIC_DASHBOARD_URI`, `NEXT_PUBLIC_BACKOFFICE_URI`, `NEXT_PUBLIC_WIKI`
+- Standard: `NODE_ENV`
+
+**Runtime:**
+- Security: `JWT_SECRET`
 - Database: `DATABASE_URL`, `DIRECT_DATABASE_URL`
-- External services: `PLUNK_API_KEY`, `STRIPE_SK`, `TYPESENSE_API_KEY`
-- Security: `JWT_SECRET`, `ADMIN_PASSWORD`
-- Infrastructure: `REDIS_URL`, `BROWSER_WS_ENDPOINT`
+- Infrastructure: `REDIS_URL`
+- Application URLs: `API_URI`, `DASHBOARD_URI`, `LANDING_URI`
+- AWS S3: `AWS_CLOUDFRONT_DISTRIBUTION_ID`, `AWS_S3_ACCESS_KEY_ID`, `AWS_S3_ACCESS_KEY_SECRET`, `AWS_S3_BUCKET`
+- AWS SES: `AWS_SES_REGION`, `AWS_SES_ACCESS_KEY_ID`, `AWS_SES_SECRET_ACCESS_KEY`, `SES_CONFIGURATION_SET`, `SES_CONFIGURATION_SET_NO_TRACKING`
+- OAuth (optional): `GITHUB_OAUTH_CLIENT`, `GITHUB_OAUTH_SECRET`, `GOOGLE_OAUTH_CLIENT`, `GOOGLE_OAUTH_SECRET`
+- Stripe (optional): `STRIPE_SK`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ONBOARDING`, `STRIPE_PRICE_EMAIL_USAGE`, `STRIPE_METER_EVENT_NAME`
+- Internal: `PLUNK_API_KEY` (for @repo/email package)
 
 ## Cursor Rules
 
