@@ -94,7 +94,42 @@ RUN mkdir -p \
     apps/wiki/.next/standalone
 
 # ============================================
-# Stage 3: Production Runtime
+# Stage 3: Production Dependencies
+# ============================================
+FROM node:20-alpine AS prod-deps
+WORKDIR /app
+
+# Install build dependencies needed for native modules
+RUN apk add --no-cache python3 make g++
+
+# Enable Corepack and set Yarn version
+RUN corepack enable && corepack prepare yarn@4.9.1 --activate
+
+# Copy Yarn configuration
+COPY --from=deps /app/.yarn ./.yarn
+COPY --from=deps /app/.yarnrc.yml ./
+COPY --from=deps /app/package.json ./
+COPY --from=deps /app/yarn.lock ./
+
+# Copy all package.json files
+COPY package.json yarn.lock ./
+COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+COPY apps/landing/package.json ./apps/landing/
+COPY apps/wiki/package.json ./apps/wiki/
+COPY packages/db/package.json ./packages/db/
+COPY packages/ui/package.json ./packages/ui/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/types/package.json ./packages/types/
+COPY packages/email/package.json ./packages/email/
+COPY packages/typescript-config/package.json ./packages/typescript-config/
+COPY packages/eslint-config/package.json ./packages/eslint-config/
+
+# Install production dependencies only
+RUN yarn workspaces focus --production && yarn cache clean
+
+# ============================================
+# Stage 4: Production Runtime
 # ============================================
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -129,8 +164,8 @@ COPY --from=builder --chown=plunk:nodejs /app/apps/web/public ./apps/web/public
 COPY --from=builder --chown=plunk:nodejs /app/apps/landing/public ./apps/landing/public
 COPY --from=builder --chown=plunk:nodejs /app/apps/wiki/public ./apps/wiki/public
 
-# Copy node_modules (production only would be better, but for monorepo we need all)
-COPY --from=builder --chown=plunk:nodejs /app/node_modules ./node_modules
+# Copy production-only node_modules from prod-deps stage
+COPY --from=prod-deps --chown=plunk:nodejs /app/node_modules ./node_modules
 
 # Copy shared packages
 COPY --from=builder --chown=plunk:nodejs /app/packages ./packages
