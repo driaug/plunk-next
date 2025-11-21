@@ -28,6 +28,8 @@ COPY packages/ui/package.json ./packages/ui/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/types/package.json ./packages/types/
 COPY packages/email/package.json ./packages/email/
+COPY packages/typescript-config/package.json ./packages/typescript-config/
+COPY packages/eslint-config/package.json ./packages/eslint-config/
 
 # Install dependencies
 RUN yarn install
