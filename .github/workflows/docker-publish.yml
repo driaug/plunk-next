@@ -186,7 +186,7 @@ jobs:
       - name: Inspect image and get digest
         id: inspect
         run: |
-          DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} --format '{{.Manifest.Digest}}')
+          DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} | grep "Digest:" | head -n1 | awk '{print $2}')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
           echo "Manifest digest: $DIGEST"
 
