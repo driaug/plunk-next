@@ -32,7 +32,8 @@ COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY packages/eslint-config/package.json ./packages/eslint-config/
 
 # Install dependencies
-RUN yarn install
+# Use --ignore-scripts since we don't have source files yet (needed for postinstall scripts)
+RUN yarn install --ignore-scripts
 
 # ============================================
 # Stage 2: Builder
@@ -52,6 +53,9 @@ COPY --from=deps /app/yarn.lock ./
 
 # Copy source code
 COPY . .
+
+# Rebuild to run any postinstall scripts that need source files (e.g., fumadocs-mdx)
+RUN yarn install
 
 # Generate Prisma client
 RUN yarn workspace @repo/db db:generate
