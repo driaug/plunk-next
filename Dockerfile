@@ -27,7 +27,8 @@ COPY packages/types/package.json ./packages/types/
 COPY packages/email/package.json ./packages/email/
 
 # Install dependencies
-RUN yarn install --immutable
+# For Yarn 4: Plain install works best in Docker (respects lockfile automatically)
+RUN yarn install
 
 # ============================================
 # Stage 2: Builder
