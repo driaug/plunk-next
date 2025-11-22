@@ -15,37 +15,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          # Release type determines how versions are calculated
-          release-type: node
-
-          # Package name for release notes
-          package-name: plunk
-
-          # Changelog sections configuration
-          changelog-types: |
-            [
-              {"type":"feat","section":"Features","hidden":false},
-              {"type":"fix","section":"Bug Fixes","hidden":false},
-              {"type":"perf","section":"Performance Improvements","hidden":false},
-              {"type":"refactor","section":"Code Refactoring","hidden":false},
-              {"type":"docs","section":"Documentation","hidden":false},
-              {"type":"chore","section":"Miscellaneous","hidden":true},
-              {"type":"style","section":"Styles","hidden":true},
-              {"type":"test","section":"Tests","hidden":true}
-            ]
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # Output release information (for debugging)
       - name: Release outputs
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.releases_created }}
         run: |
-          echo "Release created: ${{ steps.release.outputs.release_created }}"
-          echo "Tag name: ${{ steps.release.outputs.tag_name }}"
-          echo "Version: ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}"
-          echo "SHA: ${{ steps.release.outputs.sha }}"
+          echo "Releases created: ${{ steps.release.outputs.releases_created }}"
+          echo "Release data: ${{ toJSON(steps.release.outputs) }}"
 
 # How it works:
 # 1. On every push to main, Release Please analyzes commits
