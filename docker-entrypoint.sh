@@ -45,7 +45,6 @@ window.__ENV__ = {
   API_URI: '${API_URI:-http://localhost:8080}',
   DASHBOARD_URI: '${DASHBOARD_URI:-http://localhost:3000}',
   LANDING_URI: '${LANDING_URI:-http://localhost:4000}',
-  BACKOFFICE_URI: '${BACKOFFICE_URI:-http://localhost:2000}',
 };
 EOF
       ;;
@@ -93,18 +92,24 @@ case "$SERVICE" in
   web)
     echo "💻 Starting web dashboard on port 3000..."
     cd /app/apps/web/.next/standalone
+    export HOSTNAME="${HOSTNAME:-0.0.0.0}"
+    export PORT="${PORT:-3000}"
     exec node apps/web/server.js
     ;;
 
   landing)
     echo "🏠 Starting landing page on port 4000..."
     cd /app/apps/landing/.next/standalone
+    export HOSTNAME="${HOSTNAME:-0.0.0.0}"
+    export PORT="${PORT:-4000}"
     exec node apps/landing/server.js
     ;;
 
   wiki)
     echo "📚 Starting documentation site on port 1000..."
     cd /app/apps/wiki/.next/standalone
+    export HOSTNAME="${HOSTNAME:-0.0.0.0}"
+    export PORT="${PORT:-1000}"
     exec node apps/wiki/server.js
     ;;
 

@@ -120,7 +120,7 @@ Required for builds and deployment (see turbo.json and .env.self-host.example):
 - Security: `JWT_SECRET`
 - Database: `DATABASE_URL`, `DIRECT_DATABASE_URL`
 - Infrastructure: `REDIS_URL`
-- **Application URLs** (injected at runtime into Next.js apps): `API_URI`, `DASHBOARD_URI`, `LANDING_URI`, `WIKI_URI` (optional), `BACKOFFICE_URI` (optional)
+- **Application URLs** (injected at runtime into Next.js apps): `API_URI`, `DASHBOARD_URI`, `LANDING_URI`, `WIKI_URI` (optional)
 - AWS S3: `AWS_CLOUDFRONT_DISTRIBUTION_ID`, `AWS_S3_ACCESS_KEY_ID`, `AWS_S3_ACCESS_KEY_SECRET`, `AWS_S3_BUCKET`
 - AWS SES: `AWS_SES_REGION`, `AWS_SES_ACCESS_KEY_ID`, `AWS_SES_SECRET_ACCESS_KEY`, `SES_CONFIGURATION_SET`, `SES_CONFIGURATION_SET_NO_TRACKING`
 - OAuth (optional): `GITHUB_OAUTH_CLIENT`, `GITHUB_OAUTH_SECRET`, `GOOGLE_OAUTH_CLIENT`, `GOOGLE_OAUTH_SECRET`

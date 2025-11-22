@@ -146,7 +146,12 @@ services:
     environment:
       SERVICE: web
       NODE_ENV: production
-      NEXT_PUBLIC_API_URI: ${API_URI:-http://localhost:8080}
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      # Runtime environment variables (injected via __env.js at container startup)
+      API_URI: ${API_URI:-http://localhost:8080}
+      DASHBOARD_URI: ${DASHBOARD_URI:-http://localhost:3000}
+      LANDING_URI: ${LANDING_URI:-http://localhost:4000}
     ports:
       - "3000:3000"
     depends_on:
@@ -162,7 +167,12 @@ services:
     environment:
       SERVICE: landing
       NODE_ENV: production
-      NEXT_PUBLIC_API_URI: ${API_URI:-http://localhost:8080}
+      HOSTNAME: 0.0.0.0
+      PORT: 4000
+      # Runtime environment variables (injected via __env.js at container startup)
+      API_URI: ${API_URI:-http://localhost:8080}
+      DASHBOARD_URI: ${DASHBOARD_URI:-http://localhost:3000}
+      LANDING_URI: ${LANDING_URI:-http://localhost:4000}
     ports:
       - "4000:4000"
     depends_on:
@@ -180,6 +190,10 @@ services:
     environment:
       SERVICE: wiki
       NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 1000
+      # Runtime environment variables (injected via __env.js at container startup)
+      WIKI_URI: ${WIKI_URI:-http://localhost:1000}
     ports:
       - "1000:1000"
     networks:
