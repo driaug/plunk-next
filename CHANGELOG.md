@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/driaug/plunk-next/compare/v1.0.9...v1.1.0) (2025-11-22)
+
+
+### Features
+
+* Update docker-compose and entrypoint for improved configuration and service startup ([34fee03](https://github.com/driaug/plunk-next/commit/34fee037cba6918dc4c73582dd24710aa98a17f5))
+
 ## [1.0.9](https://github.com/driaug/plunk-next/compare/v1.0.8...v1.0.9) (2025-11-22)
 
 
