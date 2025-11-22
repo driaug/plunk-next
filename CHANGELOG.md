@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/driaug/plunk-next/compare/v1.2.0...v1.3.0) (2025-11-22)
+
+
+### Features
+
+* Update entrypoint and Dockerfile for Next.js standalone app structure ([23be644](https://github.com/driaug/plunk-next/commit/23be6446f5786880b5de3118f093e15bf3ffb817))
+
 ## [1.2.0](https://github.com/driaug/plunk-next/compare/v1.1.0...v1.2.0) (2025-11-22)
 
 
