@@ -1,34 +1,124 @@
-name: Docker Publish (Main Branch)
+name: Docker Build and Publish
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
-  compute-tags:
-    runs-on: ubuntu-latest
-    outputs:
-      tags: ${{ steps.compute.outputs.tags }}
-    steps:
-      - name: Compute tags for main branch
-        id: compute
-        run: |
-          SHA="${{ github.sha }}"
-          SHORT_SHA="${SHA:0:7}"
-          TAGS="sha-${SHORT_SHA},latest"
-          echo "tags=$TAGS" >> $GITHUB_OUTPUT
-          echo "Computed tags: $TAGS"
-
   build:
-    needs: compute-tags
-    uses: ./.github/workflows/docker-build.yml
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
       attestations: write
       id-token: write
-    with:
-      tags: ${{ needs.compute-tags.outputs.tags }}
-      ref: ${{ github.ref_name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if this commit is a release
+        id: check-release
+        run: |
+          git fetch --tags
+
+          # Check if this is a release-please commit
+          if git log -1 --pretty=%B | grep -q "release-please--branches--main"; then
+            echo "This is a release commit, waiting for tag..."
+            # Wait up to 60 seconds for release-please to create the tag
+            for i in {1..12}; do
+              sleep 5
+              git fetch --tags
+              TAG=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || echo "")
+              if [[ -n "$TAG" ]]; then
+                echo "is_release=true" >> $GITHUB_OUTPUT
+                echo "release_tag=$TAG" >> $GITHUB_OUTPUT
+                echo "Found release tag: $TAG"
+                exit 0
+              fi
+              echo "Waiting for tag... ($i/12)"
+            done
+            echo "ERROR: Release commit but no tag found after 60s"
+            exit 1
+          else
+            # Regular commit, check for tag immediately
+            TAG=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || echo "")
+            if [[ -n "$TAG" ]]; then
+              echo "is_release=true" >> $GITHUB_OUTPUT
+              echo "release_tag=$TAG" >> $GITHUB_OUTPUT
+              echo "This is a release: $TAG"
+            else
+              echo "is_release=false" >> $GITHUB_OUTPUT
+              echo "This is a regular commit"
+            fi
+          fi
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          docker system prune -af --volumes
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute tags
+        id: tags
+        run: |
+          if [[ "${{ steps.check-release.outputs.is_release }}" == "true" ]]; then
+            # This is a release: use semver tags
+            TAG="${{ steps.check-release.outputs.release_tag }}"
+            VERSION="${TAG#v}"
+            MAJOR=$(echo "$VERSION" | cut -d. -f1)
+            MINOR=$(echo "$VERSION" | cut -d. -f2)
+            TAGS="${VERSION},${MAJOR}.${MINOR},${MAJOR},latest"
+            echo "Building RELEASE with tags: $TAGS"
+          else
+            # Regular commit: use SHA tags
+            SHORT_SHA="${GITHUB_SHA:0:7}"
+            TAGS="sha-${SHORT_SHA},latest"
+            echo "Building COMMIT with tags: $TAGS"
+          fi
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Build and push
+        run: |
+          IMAGE="ghcr.io/${{ github.repository }}"
+          TAGS="${{ steps.tags.outputs.tags }}"
+
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --push \
+            $(echo "$TAGS" | tr ',' '\n' | sed "s|^|--tag ${IMAGE}:|") \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            --build-arg BUILDTIME="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            --build-arg VERSION="${{ github.ref_name }}" \
+            --build-arg REVISION="${{ github.sha }}" \
+            .
+
+      - name: Summary
+        run: |
+          IMAGE="ghcr.io/${{ github.repository }}"
+          TAGS="${{ steps.tags.outputs.tags }}"
+          echo "## Docker Image Published 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ steps.check-release.outputs.is_release }}" == "true" ]]; then
+            echo "**Type:** Release (${{ steps.check-release.outputs.release_tag }})" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Type:** Commit (sha-${GITHUB_SHA:0:7})" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "$TAGS" | tr ',' '\n' | sed "s|^|${IMAGE}:|" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
