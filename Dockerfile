@@ -131,10 +131,16 @@ COPY --from=builder --chown=plunk:nodejs /app/apps/web/.next/standalone ./apps/w
 COPY --from=builder --chown=plunk:nodejs /app/apps/landing/.next/standalone ./apps/landing/.next/standalone
 COPY --from=builder --chown=plunk:nodejs /app/apps/wiki/.next/standalone ./apps/wiki/.next/standalone
 
-# Copy static files for Next.js apps
-COPY --from=builder --chown=plunk:nodejs /app/apps/web/public ./apps/web/public
-COPY --from=builder --chown=plunk:nodejs /app/apps/landing/public ./apps/landing/public
-COPY --from=builder --chown=plunk:nodejs /app/apps/wiki/public ./apps/wiki/public
+# Copy static files INTO the standalone directories (required for Next.js standalone to serve assets)
+# Web app
+COPY --from=builder --chown=plunk:nodejs /app/apps/web/public ./apps/web/.next/standalone/public
+COPY --from=builder --chown=plunk:nodejs /app/apps/web/.next/static ./apps/web/.next/standalone/.next/static
+# Landing app
+COPY --from=builder --chown=plunk:nodejs /app/apps/landing/public ./apps/landing/.next/standalone/public
+COPY --from=builder --chown=plunk:nodejs /app/apps/landing/.next/static ./apps/landing/.next/standalone/.next/static
+# Wiki app
+COPY --from=builder --chown=plunk:nodejs /app/apps/wiki/public ./apps/wiki/.next/standalone/public
+COPY --from=builder --chown=plunk:nodejs /app/apps/wiki/.next/static ./apps/wiki/.next/standalone/.next/static
 
 # Copy node_modules from deps stage (includes all dependencies)
 COPY --from=deps --chown=plunk:nodejs /app/node_modules ./node_modules

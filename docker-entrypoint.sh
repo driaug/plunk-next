@@ -92,20 +92,20 @@ case "$SERVICE" in
 
   web)
     echo "💻 Starting web dashboard on port 3000..."
-    cd /app
-    exec node apps/web/.next/standalone/apps/web/server.js
+    cd /app/apps/web/.next/standalone
+    exec node apps/web/server.js
     ;;
 
   landing)
     echo "🏠 Starting landing page on port 4000..."
-    cd /app
-    exec node apps/landing/.next/standalone/apps/landing/server.js
+    cd /app/apps/landing/.next/standalone
+    exec node apps/landing/server.js
     ;;
 
   wiki)
     echo "📚 Starting documentation site on port 1000..."
-    cd /app
-    exec node apps/wiki/.next/standalone/apps/wiki/server.js
+    cd /app/apps/wiki/.next/standalone
+    exec node apps/wiki/server.js
     ;;
 
   all)
@@ -138,35 +138,38 @@ module.exports = {
     },
     {
       name: 'web',
-      script: '/app/apps/web/.next/standalone/apps/web/server.js',
-      cwd: '/app',
+      script: 'apps/web/server.js',
+      cwd: '/app/apps/web/.next/standalone',
       instances: 1,
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000
+        PORT: 3000,
+        HOSTNAME: '0.0.0.0'
       }
     },
     {
       name: 'landing',
-      script: '/app/apps/landing/.next/standalone/apps/landing/server.js',
-      cwd: '/app',
+      script: 'apps/landing/server.js',
+      cwd: '/app/apps/landing/.next/standalone',
       instances: 1,
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
-        PORT: 4000
+        PORT: 4000,
+        HOSTNAME: '0.0.0.0'
       }
     },
     {
       name: 'wiki',
-      script: '/app/apps/wiki/.next/standalone/apps/wiki/server.js',
-      cwd: '/app',
+      script: 'apps/wiki/server.js',
+      cwd: '/app/apps/wiki/.next/standalone',
       instances: 1,
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
-        PORT: 1000
+        PORT: 1000,
+        HOSTNAME: '0.0.0.0'
       }
     }
   ]
