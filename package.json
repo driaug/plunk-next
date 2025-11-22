@@ -1,6 +1,6 @@
 {
   "name": "repo",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "build": "turbo build",
@@ -9,7 +9,7 @@
     "lint": "turbo lint",
     "clean": "turbo clean --concurrency 20 && rimraf node_modules .turbo",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "services:up": "docker compose up -d"
+    "services:up": "docker compose -f docker/docker-compose.yml up -d"
   },
   "resolutions": {
     "fumadocs-core": "16.0.8"
