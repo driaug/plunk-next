@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/driaug/plunk-next/compare/v1.4.0...v1.5.0) (2025-11-22)
+
+
+### Features
+
+* Refactor environment variables for improved clarity and consistency in Docker configurations ([972cbfc](https://github.com/driaug/plunk-next/commit/972cbfceea9c2cb2d482d03405eab130d416edf1))
+
 ## [1.4.0](https://github.com/driaug/plunk-next/compare/v1.3.0...v1.4.0) (2025-11-22)
 
 
