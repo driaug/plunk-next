@@ -90,8 +90,10 @@ jobs:
             .
 
           # Get the image digest
-          DIGEST=$(docker buildx imagetools inspect ${IMAGE}:$(echo "$TAGS" | cut -d',' -f1) --format '{{.Manifest.Digest}}')
+          FIRST_TAG=$(echo "$TAGS" | cut -d',' -f1)
+          DIGEST=$(docker buildx imagetools inspect ${IMAGE}:${FIRST_TAG} | grep "Digest:" | head -n1 | awk '{print $2}')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          echo "Image digest: $DIGEST"
 
       - name: Generate artifact attestation
         if: github.ref_type == 'tag'
