@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.8](https://github.com/driaug/plunk-next/compare/v1.0.7...v1.0.8) (2025-11-22)
+
+
+### Bug Fixes
+
+* Detect release-please by branch name in merge commit ([961019a](https://github.com/driaug/plunk-next/commit/961019a4c02393735fea83b97f682a71039ec8e1))
+* Release please configuration ([0ab08e4](https://github.com/driaug/plunk-next/commit/0ab08e410f4daf5208a982c6a6a01b33391d3b22))
+* Release please configuration ([c6546cf](https://github.com/driaug/plunk-next/commit/c6546cfd945d9110d2df9fde8f9147737767fcca))
+
 ## [1.0.7](https://github.com/driaug/plunk-next/compare/v1.0.6...v1.0.7) (2025-11-22)
 
 
