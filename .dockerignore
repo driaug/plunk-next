@@ -45,6 +45,7 @@ coverage
 # Docker
 Dockerfile*
 docker
+!docker/nginx
 .dockerignore
 
 # Misc
