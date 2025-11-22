@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/driaug/plunk-next/compare/v1.1.0...v1.2.0) (2025-11-22)
+
+
+### Features
+
+* Add environment variables for service configuration in docker-compose ([679bc7b](https://github.com/driaug/plunk-next/commit/679bc7bf9c969ebfc3328ce53899eb46a72fb8d4))
+
 ## [1.1.0](https://github.com/driaug/plunk-next/compare/v1.0.9...v1.1.0) (2025-11-22)
 
 
