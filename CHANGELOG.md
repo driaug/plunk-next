@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/driaug/plunk-next/compare/v1.6.0...v1.7.0) (2025-11-22)
+
+
+### Features
+
+* Simplify and clarify self-hosting environment configuration ([41232ab](https://github.com/driaug/plunk-next/commit/41232abba9d67057e31222014470dfe15be9fc72))
+
 ## [1.6.0](https://github.com/driaug/plunk-next/compare/v1.5.0...v1.6.0) (2025-11-22)
 
 
