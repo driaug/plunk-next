@@ -99,8 +99,8 @@ RUN mkdir -p \
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install OpenSSL for Prisma and curl for health checks
-RUN apk add --no-cache openssl curl
+# Install OpenSSL for Prisma, curl for health checks, nginx, and gettext (for envsubst)
+RUN apk add --no-cache openssl curl nginx gettext
 
 # Enable Corepack and set Yarn version (must be before PM2 install)
 RUN corepack enable && corepack prepare yarn@4.9.1 --activate
@@ -112,6 +112,10 @@ RUN npm install -g pm2@latest --network-timeout=60000 --fetch-timeout=60000 --fe
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 plunk
+
+# Create nginx directories and set permissions
+RUN mkdir -p /var/log/nginx /var/lib/nginx /run/nginx && \
+    chown -R plunk:nodejs /var/log/nginx /var/lib/nginx /run/nginx /etc/nginx
 
 # Copy built artifacts from builder
 COPY --from=builder --chown=plunk:nodejs /app/apps/api/dist ./apps/api/dist
@@ -157,22 +161,24 @@ COPY --from=builder --chown=plunk:nodejs /app/.yarn ./.yarn
 COPY --from=builder --chown=plunk:nodejs /app/.yarnrc.yml ./
 COPY --from=builder --chown=plunk:nodejs /app/yarn.lock ./
 
+# Copy nginx configuration templates and setup script
+COPY --chown=plunk:nodejs docker/nginx/ /app/docker/nginx/
+RUN chmod +x /app/docker/nginx/setup-nginx.sh
+
 # Copy entrypoint script
-COPY --chown=plunk:nodejs docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY --chown=plunk:nodejs docker-entrypoint-nginx.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint-nginx.sh
 
 USER plunk
 
-# Expose ports for all services
-# 8080: API, 3000: Web, 4000: Landing, 1000: Wiki
-EXPOSE 8080 3000 4000 1000
+# Expose nginx port (default 80)
+EXPOSE 80
 
-# Health check (checks if API is running)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:8080/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))" || exit 1
+# Health check through nginx
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:80/ || exit 1
 
 # Default to running all services via entrypoint
-# Can be overridden by setting SERVICE env variable
 ENV SERVICE=all
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint-nginx.sh"]

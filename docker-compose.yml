@@ -1,0 +1,159 @@
+version: '3.8'
+
+# Plunk Self-Hosting Docker Compose
+# This setup runs all Plunk services in a single container with nginx reverse proxy
+#
+# Uses subdomain-based routing:
+#   - api.example.com -> API Server
+#   - app.example.com -> Web Dashboard
+#   - www.example.com -> Landing Page
+#   - docs.example.com -> Documentation
+#
+# Usage:
+#   1. Copy .env.self-host.example to .env and configure
+#   2. Set your domain names (API_DOMAIN, DASHBOARD_DOMAIN, etc.)
+#   3. Run: docker compose up -d
+#   4. Access your instance at the configured domains
+
+services:
+  # ============================================
+  # Infrastructure Services
+  # ============================================
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: plunk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: plunk
+      POSTGRES_USER: plunk
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plunk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - plunk
+
+  redis:
+    image: redis:7-alpine
+    container_name: plunk-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - plunk
+
+  # ============================================
+  # Plunk Application
+  # ============================================
+
+  plunk:
+    image: ghcr.io/useplunk/plunk:latest
+    container_name: plunk
+    restart: unless-stopped
+    environment:
+      # Service mode
+      SERVICE: all
+      NODE_ENV: production
+
+      # Database
+      DATABASE_URL: postgresql://plunk:${DB_PASSWORD:-changeme123}@postgres:5432/plunk
+      DIRECT_DATABASE_URL: postgresql://plunk:${DB_PASSWORD:-changeme123}@postgres:5432/plunk
+
+      # Redis
+      REDIS_URL: redis://redis:6379
+
+      # Security
+      JWT_SECRET: ${JWT_SECRET}
+
+      # Nginx configuration
+      NGINX_PORT: ${NGINX_PORT:-80}
+
+      # Domain configuration (subdomain-based routing)
+      # Each service gets its own subdomain
+      API_DOMAIN: ${API_DOMAIN:-api.localhost}
+      DASHBOARD_DOMAIN: ${DASHBOARD_DOMAIN:-app.localhost}
+      LANDING_DOMAIN: ${LANDING_DOMAIN:-www.localhost}
+      WIKI_DOMAIN: ${WIKI_DOMAIN:-docs.localhost}
+
+      # Application URLs (auto-configured by setup-nginx.sh from domains above)
+      # You can override these if needed
+      API_URI: ${API_URI:-}
+      DASHBOARD_URI: ${DASHBOARD_URI:-}
+      LANDING_URI: ${LANDING_URI:-}
+      WIKI_URI: ${WIKI_URI:-}
+
+      # AWS SES (for sending emails)
+      AWS_SES_REGION: ${AWS_SES_REGION}
+      AWS_SES_ACCESS_KEY_ID: ${AWS_SES_ACCESS_KEY_ID}
+      AWS_SES_SECRET_ACCESS_KEY: ${AWS_SES_SECRET_ACCESS_KEY}
+      SES_CONFIGURATION_SET: ${SES_CONFIGURATION_SET}
+      SES_CONFIGURATION_SET_NO_TRACKING: ${SES_CONFIGURATION_SET_NO_TRACKING:-}
+
+      # Optional: OAuth
+      GITHUB_OAUTH_CLIENT: ${GITHUB_OAUTH_CLIENT:-}
+      GITHUB_OAUTH_SECRET: ${GITHUB_OAUTH_SECRET:-}
+      GOOGLE_OAUTH_CLIENT: ${GOOGLE_OAUTH_CLIENT:-}
+      GOOGLE_OAUTH_SECRET: ${GOOGLE_OAUTH_SECRET:-}
+
+      # Optional: Stripe
+      STRIPE_SK: ${STRIPE_SK:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_ONBOARDING: ${STRIPE_PRICE_ONBOARDING:-}
+      STRIPE_PRICE_EMAIL_USAGE: ${STRIPE_PRICE_EMAIL_USAGE:-}
+      STRIPE_METER_EVENT_NAME: ${STRIPE_METER_EVENT_NAME:-emails}
+
+      # Optional: S3
+      AWS_S3_ACCESS_KEY_ID: ${AWS_S3_ACCESS_KEY_ID:-}
+      AWS_S3_ACCESS_KEY_SECRET: ${AWS_S3_ACCESS_KEY_SECRET:-}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
+      AWS_CLOUDFRONT_DISTRIBUTION_ID: ${AWS_CLOUDFRONT_DISTRIBUTION_ID:-}
+
+      # Internal
+      PLUNK_API_KEY: ${PLUNK_API_KEY:-}
+
+    ports:
+      # Nginx reverse proxy port
+      - "${NGINX_PORT:-80}:80"
+      # Optional: Expose individual service ports for debugging
+      # - "8080:8080"  # API
+      # - "3000:3000"  # Web
+      # - "4000:4000"  # Landing
+      # - "1000:1000"  # Wiki
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    healthcheck:
+      # Check nginx is running and responding
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    networks:
+      - plunk
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  plunk:
+    driver: bridge
