@@ -12,6 +12,9 @@ export default function Layout({children}: {children: ReactNode}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Runtime environment configuration - must load before any app code */}
+        <script src="/__env.js" />
+
         {/* Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

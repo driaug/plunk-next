@@ -16,6 +16,67 @@ if [ "$SERVICE" = "api" ] || [ "$SERVICE" = "all" ]; then
   yarn workspace @repo/db migrate:prod || echo "⚠️  Migration failed or already up to date"
 fi
 
+# Generate runtime environment configuration for Next.js apps
+# This allows environment variables to be changed at runtime in Docker
+generate_runtime_config() {
+  local app=$1
+  local public_dir=$2
+
+  echo "📝 Generating runtime config for $app..."
+
+  case "$app" in
+    web)
+      cat > "$public_dir/__env.js" << EOF
+// Runtime environment configuration
+// Generated at container startup from environment variables
+window.__ENV__ = {
+  API_URI: '${API_URI:-http://localhost:8080}',
+  DASHBOARD_URI: '${DASHBOARD_URI:-http://localhost:3000}',
+  LANDING_URI: '${LANDING_URI:-http://localhost:4000}',
+};
+EOF
+      ;;
+
+    landing)
+      cat > "$public_dir/__env.js" << EOF
+// Runtime environment configuration
+// Generated at container startup from environment variables
+window.__ENV__ = {
+  API_URI: '${API_URI:-http://localhost:8080}',
+  DASHBOARD_URI: '${DASHBOARD_URI:-http://localhost:3000}',
+  LANDING_URI: '${LANDING_URI:-http://localhost:4000}',
+  BACKOFFICE_URI: '${BACKOFFICE_URI:-http://localhost:2000}',
+};
+EOF
+      ;;
+
+    wiki)
+      cat > "$public_dir/__env.js" << EOF
+// Runtime environment configuration
+// Generated at container startup from environment variables
+window.__ENV__ = {
+  WIKI_URI: '${WIKI_URI:-http://localhost:1000}',
+};
+EOF
+      ;;
+  esac
+
+  echo "✅ Generated $public_dir/__env.js"
+}
+
+# Generate runtime configs based on which service is starting
+if [ "$SERVICE" = "web" ] || [ "$SERVICE" = "all" ]; then
+  generate_runtime_config "web" "/app/apps/web/public"
+fi
+
+if [ "$SERVICE" = "landing" ] || [ "$SERVICE" = "all" ]; then
+  generate_runtime_config "landing" "/app/apps/landing/public"
+fi
+
+if [ "$SERVICE" = "wiki" ] || [ "$SERVICE" = "all" ]; then
+  generate_runtime_config "wiki" "/app/apps/wiki/public"
+fi
+
 case "$SERVICE" in
   api)
     echo "🌐 Starting API server on port 8080..."

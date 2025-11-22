@@ -4,6 +4,9 @@ function Document({locale}: {locale: string}) {
   return (
     <Html lang={locale}>
       <Head>
+        {/* Runtime environment configuration - must load before any app code */}
+        <script src="/__env.js" />
+
         {/* Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
