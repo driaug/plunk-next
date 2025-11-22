@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0](https://github.com/driaug/plunk-next/compare/v1.5.0...v1.6.0) (2025-11-22)
+
+
+### Features
+
+* Add Nginx reverse proxy configuration and self-hosting guide for Plunk ([688fc98](https://github.com/driaug/plunk-next/commit/688fc98ff69523060849aa7cba2da6b9ed61d09e))
+* Add Nginx reverse proxy configuration and self-hosting guide for Plunk ([6236b78](https://github.com/driaug/plunk-next/commit/6236b78d00ecf653502411800e69b1e73de5ea0d))
+
 ## [1.5.0](https://github.com/driaug/plunk-next/compare/v1.4.0...v1.5.0) (2025-11-22)
 
 
