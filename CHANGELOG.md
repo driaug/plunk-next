@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/driaug/plunk-next/compare/v1.3.0...v1.4.0) (2025-11-22)
+
+
+### Features
+
+* Update runtime config paths for Next.js standalone app structure ([3943c9b](https://github.com/driaug/plunk-next/commit/3943c9b88b6a739d30351e60cc4b8ca90760bf8b))
+
 ## [1.3.0](https://github.com/driaug/plunk-next/compare/v1.2.0...v1.3.0) (2025-11-22)
 
 
