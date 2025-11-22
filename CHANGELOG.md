@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.6](https://github.com/driaug/plunk-next/compare/plunk-v1.0.5...plunk-v1.0.6) (2025-11-22)
+
+
+### Bug Fixes
+
+* Add disk cleanup step for Docker builds ([b93b1f9](https://github.com/driaug/plunk-next/commit/b93b1f9051f6d159998058dbed0acebe91192e9d))
+* Use grep to extract image digest ([473cb9d](https://github.com/driaug/plunk-next/commit/473cb9df045197647e9663a1cb5da146a6256347))
+
+
+### Code Refactoring
+
+* Simplify Docker workflow based on Umami's approach ([5497d8b](https://github.com/driaug/plunk-next/commit/5497d8bb07fb581ed049bb5cf03ccd014160fd8b))
+
 ## [1.0.5](https://github.com/driaug/plunk-next/compare/plunk-v1.0.4...plunk-v1.0.5) (2025-11-22)
 
 
