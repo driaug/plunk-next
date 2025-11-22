@@ -179,6 +179,11 @@ services:
     environment:
       SERVICE: web
       NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      API_URI: ${API_URI:-http://localhost:8080}
+      DASHBOARD_URI: ${DASHBOARD_URI:-http://localhost:3000}
+      LANDING_URI: ${LANDING_URI:-http://localhost:4000}
       NEXT_PUBLIC_API_URI: ${API_URI:-http://localhost:8080}
       NEXT_PUBLIC_DASHBOARD_URI: ${DASHBOARD_URI:-http://localhost:3000}
       NEXT_PUBLIC_LANDING_URI: ${LANDING_URI:-http://localhost:4000}
@@ -197,6 +202,11 @@ services:
     environment:
       SERVICE: landing
       NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 4000
+      API_URI: ${API_URI:-http://localhost:8080}
+      DASHBOARD_URI: ${DASHBOARD_URI:-http://localhost:3000}
+      LANDING_URI: ${LANDING_URI:-http://localhost:4000}
       NEXT_PUBLIC_API_URI: ${API_URI:-http://localhost:8080}
       NEXT_PUBLIC_DASHBOARD_URI: ${DASHBOARD_URI:-http://localhost:3000}
       NEXT_PUBLIC_LANDING_URI: ${LANDING_URI:-http://localhost:4000}
@@ -217,6 +227,9 @@ services:
     environment:
       SERVICE: wiki
       NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 1000
+      WIKI_URI: ${WIKI_URI:-http://localhost:1000}
       NEXT_PUBLIC_API_URI: ${API_URI:-http://localhost:8080}
     ports:
       - "1000:1000"
