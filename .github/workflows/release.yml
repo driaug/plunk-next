@@ -26,9 +26,12 @@ jobs:
       # Output release information (for debugging)
       - name: Release outputs
         if: ${{ steps.release.outputs.releases_created }}
+        env:
+          RELEASE_DATA: ${{ toJSON(steps.release.outputs) }}
         run: |
-          echo "Releases created: ${{ steps.release.outputs.releases_created }}"
-          echo "Release data: ${{ toJSON(steps.release.outputs) }}"
+          echo "Releases created: true"
+          echo "Release data:"
+          echo "$RELEASE_DATA"
 
 # How it works:
 # 1. On every push to main, Release Please analyzes commits
