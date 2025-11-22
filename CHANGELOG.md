@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/driaug/plunk-next/compare/plunk-v1.0.4...plunk-v1.0.5) (2025-11-22)
+
+
+### Bug Fixes
+
+* Correct Docker image tagging for semver releases ([ce96444](https://github.com/driaug/plunk-next/commit/ce9644482473a2b866f974571b98202a23d72124))
+
 ## [1.0.4](https://github.com/driaug/plunk-next/compare/plunk-v1.0.3...plunk-v1.0.4) (2025-11-22)
 
 
