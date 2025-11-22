@@ -106,7 +106,8 @@ RUN apk add --no-cache openssl curl
 RUN corepack enable && corepack prepare yarn@4.9.1 --activate
 
 # Install PM2 globally for process management (when running all services)
-RUN npm install -g pm2
+# Use timeout to prevent hangs on ARM64 builds
+RUN npm install -g pm2@latest --network-timeout=60000 --fetch-timeout=60000 --fetch-retries=3
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs
