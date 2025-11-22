@@ -128,12 +128,36 @@ services:
       DIRECT_DATABASE_URL: postgresql://plunk:${DB_PASSWORD:-changeme123}@postgres:5432/plunk
       # Redis
       REDIS_URL: redis://redis:6379
+      # Auth
+      JWT_SECRET: ${JWT_SECRET}
+      # URLs
+      API_URI: ${API_URI:-http://localhost:8080}
+      DASHBOARD_URI: ${DASHBOARD_URI:-http://localhost:3000}
+      LANDING_URI: ${LANDING_URI:-http://localhost:4000}
       # AWS SES (for sending emails)
       AWS_SES_REGION: ${AWS_SES_REGION}
       AWS_SES_ACCESS_KEY_ID: ${AWS_SES_ACCESS_KEY_ID}
       AWS_SES_SECRET_ACCESS_KEY: ${AWS_SES_SECRET_ACCESS_KEY}
       SES_CONFIGURATION_SET: ${SES_CONFIGURATION_SET}
       SES_CONFIGURATION_SET_NO_TRACKING: ${SES_CONFIGURATION_SET_NO_TRACKING:-}
+      # Optional: OAuth
+      GITHUB_OAUTH_CLIENT: ${GITHUB_OAUTH_CLIENT:-}
+      GITHUB_OAUTH_SECRET: ${GITHUB_OAUTH_SECRET:-}
+      GOOGLE_OAUTH_CLIENT: ${GOOGLE_OAUTH_CLIENT:-}
+      GOOGLE_OAUTH_SECRET: ${GOOGLE_OAUTH_SECRET:-}
+      # Optional: Stripe (for billing)
+      STRIPE_SK: ${STRIPE_SK:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_ONBOARDING: ${STRIPE_PRICE_ONBOARDING:-}
+      STRIPE_PRICE_EMAIL_USAGE: ${STRIPE_PRICE_EMAIL_USAGE:-}
+      STRIPE_METER_EVENT_NAME: ${STRIPE_METER_EVENT_NAME:-emails}
+      # Optional: S3 Storage
+      AWS_S3_ACCESS_KEY_ID: ${AWS_S3_ACCESS_KEY_ID:-}
+      AWS_S3_ACCESS_KEY_SECRET: ${AWS_S3_ACCESS_KEY_SECRET:-}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
+      AWS_CLOUDFRONT_DISTRIBUTION_ID: ${AWS_CLOUDFRONT_DISTRIBUTION_ID:-}
+      # Optional: Internal
+      PLUNK_API_KEY: ${PLUNK_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy

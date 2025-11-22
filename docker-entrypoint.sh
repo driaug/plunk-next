@@ -92,20 +92,20 @@ case "$SERVICE" in
 
   web)
     echo "💻 Starting web dashboard on port 3000..."
-    cd /app/apps/web
-    exec yarn start
+    cd /app
+    exec node apps/web/.next/standalone/apps/web/server.js
     ;;
 
   landing)
     echo "🏠 Starting landing page on port 4000..."
-    cd /app/apps/landing
-    exec yarn start
+    cd /app
+    exec node apps/landing/.next/standalone/apps/landing/server.js
     ;;
 
   wiki)
     echo "📚 Starting documentation site on port 1000..."
-    cd /app/apps/wiki
-    exec yarn start
+    cd /app
+    exec node apps/wiki/.next/standalone/apps/wiki/server.js
     ;;
 
   all)
