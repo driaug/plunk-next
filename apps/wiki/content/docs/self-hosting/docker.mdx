@@ -58,7 +58,7 @@ LANDING_URI="http://localhost:3002"
 ### 4. Start Services
 
 ```bash
-docker-compose up -d
+docker compose -f docker/docker-compose.self-host.yml up -d
 ```
 
 This starts:
@@ -71,7 +71,7 @@ This starts:
 ### 5. Run Migrations
 
 ```bash
-docker-compose exec api yarn workspace @repo/db migrate:prod
+docker compose -f docker/docker-compose.self-host.yml exec api yarn workspace @repo/db migrate:prod
 ```
 
 ### 6. Access Dashboard
@@ -171,7 +171,7 @@ volumes:
 #### Scale Workers
 
 ```bash
-docker-compose up -d --scale worker=3
+docker compose -f docker/docker-compose.self-host.yml up -d --scale worker=3
 ```
 
 Run multiple worker processes for higher email throughput.
@@ -191,37 +191,37 @@ For production, run services on separate servers:
 
 ```bash
 # All services
-docker-compose logs -f
+docker compose -f docker/docker-compose.self-host.yml logs -f
 
 # Specific service
-docker-compose logs -f api
-docker-compose logs -f worker
+docker compose -f docker/docker-compose.self-host.yml logs -f api
+docker compose -f docker/docker-compose.self-host.yml logs -f worker
 ```
 
 ### Restart Services
 
 ```bash
-docker-compose restart api worker
+docker compose -f docker/docker-compose.self-host.yml restart api worker
 ```
 
 ### Update Plunk
 
 ```bash
 git pull
-docker-compose build
-docker-compose up -d
+docker compose -f docker/docker-compose.self-host.yml build
+docker compose -f docker/docker-compose.self-host.yml up -d
 ```
 
 ### Backup Database
 
 ```bash
-docker-compose exec db pg_dump -U postgres plunk > backup.sql
+docker compose -f docker/docker-compose.self-host.yml exec db pg_dump -U postgres plunk > backup.sql
 ```
 
 ### Restore Database
 
 ```bash
-docker-compose exec -T db psql -U postgres plunk < backup.sql
+docker compose -f docker/docker-compose.self-host.yml exec -T db psql -U postgres plunk < backup.sql
 ```
 
 ## Troubleshooting
@@ -230,26 +230,26 @@ docker-compose exec -T db psql -U postgres plunk < backup.sql
 
 Check logs:
 ```bash
-docker-compose logs
+docker compose -f docker/docker-compose.self-host.yml logs
 ```
 
 ### Database connection errors
 
 Ensure DATABASE_URL is correct and database is running:
 ```bash
-docker-compose ps db
+docker compose -f docker/docker-compose.self-host.yml ps db
 ```
 
 ### Worker not processing jobs
 
 Check worker logs:
 ```bash
-docker-compose logs worker
+docker compose -f docker/docker-compose.self-host.yml logs worker
 ```
 
 Verify Redis connection:
 ```bash
-docker-compose exec redis redis-cli PING
+docker compose -f docker/docker-compose.self-host.yml exec redis redis-cli PING
 ```
 
 ## Next Steps

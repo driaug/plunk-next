@@ -5,7 +5,7 @@ version: '3.8'
 #
 # Usage:
 #   1. Copy .env.self-host.example to .env and configure your settings
-#   2. Run: docker compose -f docker-compose.custom.yml up -d
+#   2. Run: docker compose -f docker/docker-compose.custom.yml up -d
 #   3. Access:
 #      - Dashboard: http://localhost:3000
 #      - API: http://localhost:8080

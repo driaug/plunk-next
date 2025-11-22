@@ -10,7 +10,7 @@ The easiest way to run Plunk is with Docker. We provide a single Docker image co
 
 ```bash
 # Download the configuration files
-curl -O https://raw.githubusercontent.com/useplunk/plunk/main/docker-compose.self-host.yml
+curl -O https://raw.githubusercontent.com/useplunk/plunk/main/docker/docker-compose.self-host.yml
 curl -O https://raw.githubusercontent.com/useplunk/plunk/main/.env.self-host.example
 
 # Configure environment variables
@@ -18,7 +18,7 @@ cp .env.self-host.example .env
 # Edit .env with your settings (see SELF_HOSTING.md for details)
 
 # Start Plunk
-docker compose -f docker-compose.self-host.yml up -d
+docker compose -f docker/docker-compose.self-host.yml up -d
 
 # Access the dashboard at http://localhost:3000
 ```

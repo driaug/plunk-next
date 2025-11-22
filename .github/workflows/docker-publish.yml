@@ -219,7 +219,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Run with Docker Compose" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "docker compose -f docker-compose.self-host.yml up -d" >> $GITHUB_STEP_SUMMARY
+          echo "docker compose -f docker/docker-compose.self-host.yml up -d" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
   # Test the multi-arch image
@@ -265,4 +265,4 @@ jobs:
         if: failure()
         run: |
           echo "📋 Smoke test failed. Showing logs..."
-          docker compose -f docker-compose.smoke-test.yml logs
+          docker compose -f docker/docker-compose.smoke-test.yml logs
