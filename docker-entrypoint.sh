@@ -66,15 +66,15 @@ EOF
 
 # Generate runtime configs based on which service is starting
 if [ "$SERVICE" = "web" ] || [ "$SERVICE" = "all" ]; then
-  generate_runtime_config "web" "/app/apps/web/public"
+  generate_runtime_config "web" "/app/apps/web/.next/standalone/public"
 fi
 
 if [ "$SERVICE" = "landing" ] || [ "$SERVICE" = "all" ]; then
-  generate_runtime_config "landing" "/app/apps/landing/public"
+  generate_runtime_config "landing" "/app/apps/landing/.next/standalone/public"
 fi
 
 if [ "$SERVICE" = "wiki" ] || [ "$SERVICE" = "all" ]; then
-  generate_runtime_config "wiki" "/app/apps/wiki/public"
+  generate_runtime_config "wiki" "/app/apps/wiki/.next/standalone/public"
 fi
 
 case "$SERVICE" in
