@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.9](https://github.com/driaug/plunk-next/compare/v1.0.8...v1.0.9) (2025-11-22)
+
+
+### Bug Fixes
+
+* Add npm timeout for PM2 install on ARM64 ([56851bb](https://github.com/driaug/plunk-next/commit/56851bb0776a276d402e96ea94e6f64a82b82433))
+
 ## [1.0.8](https://github.com/driaug/plunk-next/compare/v1.0.7...v1.0.8) (2025-11-22)
 
 
